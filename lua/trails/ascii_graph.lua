@@ -1,5 +1,46 @@
 local A = {}
 
+-- UP=first bit, RIGHT=second bit, DOWN=third bit, LEFT=fourth bit
+A.path_lookup = {
+    [0b0000] = ' ',
+    [0b1010] = '│',
+    [0b0101] = '─',
+
+    [0b1100] = '└',
+    [0b1001] = '┘',
+    [0b0110] = '┌',
+    [0b0011] = '┐',
+
+    [0b0111] = '┬',
+    [0b1101] = '┴',
+    [0b1110] = '├',
+    [0b1011] = '┤',
+
+    [0b1111] = '┼',
+}
+A.path_reverse_lookup = {
+    [' '] =  0b0000,
+    ['│'] =  0b1010,
+    ['─'] =  0b0101,
+
+    ['└'] =  0b1100,
+    ['┘'] =  0b1001,
+    ['┌'] =  0b0110,
+    ['┐'] =  0b0011,
+
+    ['┬'] =  0b0111,
+    ['┴'] =  0b1101,
+    ['├'] =  0b1110,
+    ['┤'] =  0b1011,
+
+    ['┼'] =  0b1111,
+}
+
+local function add_binary_edges(one, two)
+    return bit.bor(one, two)
+end
+
+
 local function get_value_index(list, value)
     for i,v in pairs(list) do
         if v == value then
@@ -10,53 +51,14 @@ local function get_value_index(list, value)
 end
 
 local function replace_char(pos, str, r)
-    --pos = vim.str_utfindex(str, pos)
     return vim.fn.strcharpart(str, 0, pos) .. r .. vim.fn.strcharpart(str, pos+1)
 end
 
 local function add_edge(pos, str, edge)
-    --print(vim.inspect("called: " .. pos .. " str: " .. str .. " with trad len: " .. #str))
-
-    --print(("add edge with str \"" .. str .. "\" with len: " .. vim.str_byteindex(str, vim.str_utfindex(str, #str)) .. " edge: " .. edge))
     local current_edge = vim.fn.strgetchar(str, pos)
-    --print(("current edge: " .. vim.fn.nr2char(current_edge) .. " from pos: " .. pos))
-    if edge == '┐' then
-        if current_edge == vim.fn.char2nr(' ') then
-            str = replace_char(pos, str, edge)
-        elseif current_edge == vim.fn.char2nr('─') then
-            str = replace_char(pos, str, '┬')
-        end
-    elseif edge == '│' then
-        if current_edge == vim.fn.char2nr(' ') then
-            str = replace_char(pos, str, edge)
-        elseif current_edge == vim.fn.char2nr('└') then
-            str = replace_char(pos, str, '├')
-        elseif current_edge == vim.fn.char2nr('┘') then
-            str = replace_char(pos, str, '┤')
-        end
-    elseif edge == '└' then
-        if current_edge == vim.fn.char2nr(' ') then
-            str = replace_char(pos, str, edge)
-        end
-    elseif edge == '►' then
-        str = replace_char(pos, str, edge)
-    elseif edge == '─' then
-        if current_edge == vim.fn.char2nr(' ') then
-            str = replace_char(pos, str, edge)
-        end
-    elseif edge == '┘' then
-        if current_edge == vim.fn.char2nr(' ') then
-            str = replace_char(pos, str, edge)
-        end
-    elseif edge == '┌' then
-        if current_edge == vim.fn.char2nr(' ') then
-            str = replace_char(pos, str, edge)
-        elseif current_edge == vim.fn.char2nr('─') then
-            str = replace_char(pos, str, '┬')
-        elseif current_edge == vim.fn.char2nr('┤') then
-            str = replace_char(pos, str, '┼')
-        end
-    end
+    local current_edge_bin = A.path_reverse_lookup[vim.fn.nr2char(current_edge)]
+    local edge_bin = A.path_reverse_lookup[edge]
+    str = replace_char(pos, str, A.path_lookup[add_binary_edges(current_edge_bin, edge_bin)])
 
     return str
 end
