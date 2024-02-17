@@ -9,6 +9,7 @@ local M = {
 }
 
 local g = require("trails.graph")
+local a = require("trails.ascii_graph")
 
 function M.open_split()
     vim.cmd('below split')
@@ -61,7 +62,7 @@ function M.move_focus(dir)
     end
 
     focused_node_key = M.layer_to_node_keys[M.focused_node_key_index[1]][M.focused_node_key_index[2]]
-    M.print_lines_to_buffer(M.buf, g.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys, M.layer_widht))
+    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys, M.layer_widht))
 end
 
 
@@ -93,7 +94,7 @@ local incomingCallsRoothandler = function(err, result, ctx, config)
     M.open_split()
     M.layer_to_node_keys, M.layer_widht, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
     local focused_node_key = M.layer_to_node_keys[M.focused_node_key_index[1]][M.focused_node_key_index[2]]
-    M.print_lines_to_buffer(M.buf, g.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys, M.layer_widht))
+    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys, M.layer_widht))
 end
 
 local handler = function(err, result, ctx, config)
@@ -113,7 +114,7 @@ local handler = function(err, result, ctx, config)
     parent.expanded = true
     M.layer_to_node_keys, M.layer_widht, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
     local focused_node_key = M.layer_to_node_keys[M.focused_node_key_index[1]][M.focused_node_key_index[2]]
-    M.print_lines_to_buffer(M.buf, g.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys, M.layer_widht))
+    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys, M.layer_widht))
 end
 
 M.setup = function(opts)
