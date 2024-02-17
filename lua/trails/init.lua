@@ -134,6 +134,11 @@ local function rtrim(s)
   return s:match'^(.*%S)%s*$'
 end
 
+M.print_tree = function()
+    --g.print_tree(M.root)
+    g.print_tree(M.key_to_node_with_fake[M.layer_to_node_keys[1][1]])
+end
+
 M.print_lines_to_buffer = function(buf, lines)
     vim.api.nvim_buf_set_option(buf, 'modifiable', true)
     vim.api.nvim_buf_set_lines(buf, 0, -1, true, {})
