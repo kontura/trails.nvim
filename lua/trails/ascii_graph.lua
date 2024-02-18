@@ -188,5 +188,61 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys, layer_
     return lines
 end
 
+A.is_crossing = function(a_start, a_end, b_start, b_end)
+    if (a_start == b_start) then
+        return 0
+    end
+    if (a_end == b_end) then
+        return 0
+    end
+
+    local x1, x2, y1, y2
+    if (a_start < a_end) then
+        x1 = a_start
+        x2 = a_end
+    else
+        x1 = a_end
+        x2 = a_start
+    end
+    if (b_start < b_end) then
+        y1 = b_start
+        y2 = b_end
+    else
+        y1 = b_end
+        y2 = b_start
+    end
+
+
+    if (x1 <= y2 and y1 <= x2) then
+        return 1
+    end
+    return 0
+end
+
+A.count_crossings = function(key_to_node, layer_to_node_keys)
+    local layer_count = #layer_to_node_keys
+    local crossings = 0
+
+            --crossings = vim.inspect(layer_to_node_keys)
+    for layer_index = 2, layer_count do
+        local targets = layer_to_node_keys[layer_index]
+        local sources = layer_to_node_keys[layer_index-1]
+        for sourceA_i, source_key in pairs(sources) do
+            local sourceA = key_to_node[source_key]
+            for _, childA in pairs(sourceA.children) do
+                local tartgetA = get_value_index(targets, childA.key)
+                for sourceB_i = sourceA_i, #sources do
+                    local sourceB = key_to_node[sources[sourceB_i]]
+                    for _, childB in pairs(sourceB.children) do
+                        local tartgetB = get_value_index(targets, childB.key)
+                        crossings = crossings + A.is_crossing(sourceA_i, tartgetA, sourceB_i, tartgetB)
+                    end
+                end
+            end
+        end
+    end
+
+    return crossings
+end
 
 return A
