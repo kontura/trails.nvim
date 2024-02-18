@@ -146,10 +146,10 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys, layer_
                         lines[current_line] = lines[current_line] .. "[" ..  mynode.name .. expanded .. "]"
                     end
                 else
-                    lines[current_line] = lines[current_line] .. "──" ..  mynode.name .. "─" .. "─"
+                    lines[current_line] = lines[current_line] .. "─" ..  mynode.name .. "─" .. "─"
             end
-            if #mynode.name < layer_width[layer_index] then
-                local current_name_len = #mynode.name
+            if vim.fn.strcharlen(mynode.name) < layer_width[layer_index] then
+                local current_name_len = vim.fn.strcharlen(mynode.name)
                 while current_name_len < layer_width[layer_index] do
                     if mynode.expanded and #mynode.children > 0 then
                         lines[current_line] = lines[current_line] .. '─'
