@@ -90,17 +90,17 @@ G.layout_graph = function(root, key_to_node)
     end
 
     local layer_width = {}
-    local layer_to_node_keys_with_fake = {}
+    local layer_to_node_keys = {}
     for node_key, layer_index in pairs(node_to_layer) do
         local node = key_to_node[node_key]
         if (node == nil) then
             P(node_key .. " is nil node")
         end
 
-        if not layer_to_node_keys_with_fake[layer_index] then
-            layer_to_node_keys_with_fake[layer_index] = {}
+        if not layer_to_node_keys[layer_index] then
+            layer_to_node_keys[layer_index] = {}
         end
-        table.insert(layer_to_node_keys_with_fake[layer_index], node_key)
+        table.insert(layer_to_node_keys[layer_index], node_key)
 
         if not layer_width[layer_index] then
             layer_width[layer_index] = string.len(node.name)
@@ -122,8 +122,8 @@ G.layout_graph = function(root, key_to_node)
     for layer_index = 1, layer_count do
         -- Consider only from the second layer, there are no connections to the first layer.
         if layer_index ~= 1 then
-            local sources = layer_to_node_keys_with_fake[layer_index-1]
-            local targets = layer_to_node_keys_with_fake[layer_index]
+            local sources = layer_to_node_keys[layer_index-1]
+            local targets = layer_to_node_keys[layer_index]
             for _, source_key in pairs(sources) do
                 local source = key_to_node_with_fake[source_key]
                 for _, child in pairs(source.children) do
@@ -134,7 +134,7 @@ G.layout_graph = function(root, key_to_node)
                             key_to_node_with_fake[fake_node_key] = fake_node
                             table.insert(source.children, fake_node)
                             source.children = remove_node_by_key(source.children, child.key)
-                            table.insert(layer_to_node_keys_with_fake[layer_index], fake_node_key)
+                            table.insert(layer_to_node_keys[layer_index], fake_node_key)
                         end
                     end
                 end
@@ -144,7 +144,7 @@ G.layout_graph = function(root, key_to_node)
     end
 
     -- Wrap all of these into a graph table
-    return layer_to_node_keys_with_fake, layer_width, key_to_node_with_fake
+    return layer_to_node_keys, layer_width, key_to_node_with_fake
 end
 
 return G
