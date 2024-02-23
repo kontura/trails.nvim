@@ -89,7 +89,6 @@ G.layout_graph = function(root, key_to_node)
         column = next_column
     end
 
-    local layer_width = {}
     local layer_to_node_keys = {}
     for node_key, layer_index in pairs(node_to_layer) do
         local node = key_to_node[node_key]
@@ -101,14 +100,6 @@ G.layout_graph = function(root, key_to_node)
             layer_to_node_keys[layer_index] = {}
         end
         table.insert(layer_to_node_keys[layer_index], node_key)
-
-        if not layer_width[layer_index] then
-            layer_width[layer_index] = string.len(node.name)
-        else
-            if layer_width[layer_index] < string.len(node.name) then
-                layer_width[layer_index] = string.len(node.name)
-            end
-        end
     end
 
     -- Clone all nodes so we can insert fakes
@@ -144,7 +135,7 @@ G.layout_graph = function(root, key_to_node)
     end
 
     -- Wrap all of these into a graph table
-    return layer_to_node_keys, layer_width, key_to_node_with_fake
+    return layer_to_node_keys, key_to_node_with_fake
 end
 
 return G

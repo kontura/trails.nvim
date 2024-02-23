@@ -5,7 +5,6 @@ local M = {
     buf = nil,
     key_to_node = {},
     layer_to_node_keys = nil,
-    layer_widht = nil
 }
 
 local g = require("trails.graph")
@@ -62,7 +61,7 @@ function M.move_focus(dir)
     end
 
     focused_node_key = M.layer_to_node_keys[M.focused_node_key_index[1]][M.focused_node_key_index[2]]
-    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys, M.layer_widht))
+    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys))
 end
 
 
@@ -92,9 +91,9 @@ local incomingCallsRoothandler = function(err, result, ctx, config)
         M.root = root
     end
     M.open_split()
-    M.layer_to_node_keys, M.layer_widht, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
+    M.layer_to_node_keys, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
     local focused_node_key = M.layer_to_node_keys[M.focused_node_key_index[1]][M.focused_node_key_index[2]]
-    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys, M.layer_widht))
+    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys))
 end
 
 local handler = function(err, result, ctx, config)
@@ -112,9 +111,9 @@ local handler = function(err, result, ctx, config)
         table.insert(parent.children, node)
     end
     parent.expanded = true
-    M.layer_to_node_keys, M.layer_widht, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
+    M.layer_to_node_keys, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
     local focused_node_key = M.layer_to_node_keys[M.focused_node_key_index[1]][M.focused_node_key_index[2]]
-    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys, M.layer_widht))
+    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys))
 end
 
 M.setup = function(opts)

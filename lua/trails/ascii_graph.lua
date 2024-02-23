@@ -92,12 +92,20 @@ local function _add_connection(lines, source_i, child_i)
     end
 end
 
-A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys, layer_width)
+A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
+    local layer_width = {}
     local max_lines = 1
     local layer_count = #layer_to_node_keys
     for layer_index = 1, layer_count do
         if layer_to_node_keys[layer_index] then
+            layer_width[layer_index] = 0
             local layer_nodes = layer_to_node_keys[layer_index]
+            for _, node_key in pairs(layer_nodes) do
+                local mynode = key_to_node[node_key]
+                if vim.fn.strcharlen(mynode.name) > layer_width[layer_index] then
+                    layer_width[layer_index] = vim.fn.strcharlen(mynode.name)
+                end
+            end
             if max_lines < #layer_nodes then
                 max_lines = #layer_nodes
             end
