@@ -36,10 +36,13 @@ A.path_reverse_lookup = {
     ['┼'] =  0b1111,
 }
 
+local function rtrim(s)
+  return s:match'^(.*%S)%s*$'
+end
+
 local function add_binary_edges(one, two)
     return bit.bor(one, two)
 end
-
 
 local function get_value_index(list, value)
     for i,v in pairs(list) do
@@ -184,6 +187,9 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys, layer_
         end
     end
 
+    for i = 1, #lines do
+        lines[i] = rtrim(lines[i])
+    end
 
     return lines
 end
