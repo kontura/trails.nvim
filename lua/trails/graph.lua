@@ -1,7 +1,48 @@
 local G = {}
+local u = require("trails.utils")
 
 function G.make_key(name, uri)
     return name.."-"..uri
+end
+
+G.is_crossing = function(a_start, a_end, b_start, b_end)
+    if (a_start == b_start) then
+        return 0
+    end
+    if (a_end == b_end) then
+        return 0
+    end
+
+    if ((a_start < b_start and a_end > b_end) or (a_start > b_start and a_end < b_end)) then
+        return 1
+    end
+    return 0
+end
+
+G.count_crossings = function(key_to_node, layer_to_node_keys)
+    local layer_count = #layer_to_node_keys
+    local crossings = 0
+
+            --crossings = vim.inspect(layer_to_node_keys)
+    for layer_index = 2, layer_count do
+        local targets = layer_to_node_keys[layer_index]
+        local sources = layer_to_node_keys[layer_index-1]
+        for sourceA_i, source_key in pairs(sources) do
+            local sourceA = key_to_node[source_key]
+            for _, childA in pairs(sourceA.children) do
+                local tartgetA = u.get_value_index(targets, childA.key)
+                for sourceB_i = sourceA_i, #sources do
+                    local sourceB = key_to_node[sources[sourceB_i]]
+                    for _, childB in pairs(sourceB.children) do
+                        local tartgetB = u.get_value_index(targets, childB.key)
+                        crossings = crossings + G.is_crossing(sourceA_i, tartgetA, sourceB_i, tartgetB)
+                    end
+                end
+            end
+        end
+    end
+
+    return crossings
 end
 
 function G.print_tree(root, indent)
