@@ -1,4 +1,5 @@
 local A = {}
+local u = require("trails.utils")
 
 -- UP=first bit, RIGHT=second bit, DOWN=third bit, LEFT=fourth bit
 A.path_lookup = {
@@ -42,15 +43,6 @@ end
 
 local function add_binary_edges(one, two)
     return bit.bor(one, two)
-end
-
-local function get_value_index(list, value)
-    for i,v in pairs(list) do
-        if v == value then
-            return i
-        end
-    end
-    return -1
 end
 
 local function replace_char(pos, str, r)
@@ -153,7 +145,7 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
                     --P("  " .. child.name)
                     if vim.tbl_contains(targets, child.key) then
                         -- At the end I will have to extend all lenghts
-                        local con_width = _add_connection(lines, starting_index, source_i, get_value_index(targets, child.key))
+                        local con_width = _add_connection(lines, starting_index, source_i, u.get_value_index(targets, child.key))
                         if max_connection_width < con_width then
                             max_connection_width = con_width
                         end
