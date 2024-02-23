@@ -174,9 +174,6 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
         table.insert(lines, "")
     end
 
-    --P("Printing: " .. layer_to_node_keys[1][1])
-    --G.print_tree(key_to_node[layer_to_node_keys[1][1]])
-
     for layer_index = 1, layer_count do
         local layer_nodes = padded_layer_to_node_keys[layer_index]
 
