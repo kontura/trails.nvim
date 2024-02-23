@@ -96,6 +96,51 @@ local function _add_connection(lines, starting_index, source_i, child_i)
     return walked
 end
 
+local draw_node = function(node, layer_width, active_node_key)
+    local line = ""
+    local expanded = 'C'
+    if node.expanded then
+        expanded = 'E'
+    end
+    if (node.key == "empty") then
+        line = line .. " " ..  node.name .. " " .. " "
+    elseif node.name ~= "───" then
+        if node.key == active_node_key then
+            line = line .. "<" ..  node.name .. expanded .. ">"
+        else
+            line = line .. "[" ..  node.name .. expanded .. "]"
+        end
+    else
+        --P(vim.fn.strcharlen(node.name) .. " is len of " .. node.name)
+        --P(#node.name)
+        line = line .. "─" ..  node.name .. "─" .. "─"
+    end
+    if vim.fn.strcharlen(node.name) < layer_width then
+        local current_name_len = vim.fn.strcharlen(node.name)
+        while current_name_len < layer_width do
+            if node.expanded and #node.children > 0 then
+                line = line .. '─'
+            else
+                line = line .. ' '
+            end
+            current_name_len = current_name_len + 1
+        end
+    end
+
+    if node.expanded and #node.children > 0 then
+        -- if is not fake, TODO(amatej): maybe create a better condition if node.is_fake then
+        if node.name ~= "───" then
+            line = line .. '◄'
+        else
+            line = line .. '─'
+        end
+    else
+        line = line .. ' '
+    end
+
+    return line
+end
+
 A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
     local layer_width = {}
     local max_lines = 1
@@ -128,7 +173,6 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
     --G.print_tree(key_to_node[layer_to_node_keys[1][1]])
 
     for layer_index = 1, layer_count do
-        local current_line = 1
         local layer_nodes = layer_to_node_keys[layer_index]
 
         -- We have written at least one full layer -> we can create connections to the next
@@ -170,45 +214,11 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
             end
         end
 
+        local current_line = 1
         for _, node_key in pairs(layer_nodes) do
             local mynode = key_to_node[node_key]
 
-            local expanded = 'C'
-            if mynode.expanded then
-                expanded = 'E'
-            end
-            if mynode.name ~= "───" then
-                    if mynode.key == active_node_key then
-                        lines[current_line] = lines[current_line] .. "<" ..  mynode.name .. expanded .. ">"
-                    else
-                        lines[current_line] = lines[current_line] .. "[" ..  mynode.name .. expanded .. "]"
-                    end
-                else
-                    lines[current_line] = lines[current_line] .. "─" ..  mynode.name .. "─" .. "─"
-            end
-            if vim.fn.strcharlen(mynode.name) < layer_width[layer_index] then
-                local current_name_len = vim.fn.strcharlen(mynode.name)
-                while current_name_len < layer_width[layer_index] do
-                    if mynode.expanded and #mynode.children > 0 then
-                        lines[current_line] = lines[current_line] .. '─'
-                    else
-                        lines[current_line] = lines[current_line] .. ' '
-                    end
-                    current_name_len = current_name_len + 1
-                end
-            end
-
-            if mynode.expanded and #mynode.children > 0 then
-                -- if is not fake, TODO(amatej): maybe create a better condition if mynode.is_fake then
-                if mynode.name ~= "───" then
-                    lines[current_line] = lines[current_line] .. '◄  '
-                else
-                    lines[current_line] = lines[current_line] .. '─  '
-                end
-            else
-                lines[current_line] = lines[current_line] .. '   '
-            end
-
+            lines[current_line] = lines[current_line] .. draw_node(mynode, layer_width[layer_index], active_node_key)
             current_line = current_line + 1
         end
 
