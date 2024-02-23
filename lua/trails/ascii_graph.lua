@@ -75,29 +75,33 @@ local function add_edge(pos, str, edge)
 end
 
 -- By default all edges go just straight we have to figure out what to do here
-local function _add_connection(lines, source_i, child_i)
+local function _add_connection(lines, starting_index, source_i, child_i)
+    local walked = 0
     if source_i == child_i then
-        lines[source_i] = add_edge(vim.fn.strcharlen(lines[source_i]) - 2, lines[source_i], '─')
-        lines[source_i] = add_edge(vim.fn.strcharlen(lines[source_i]) - 1, lines[source_i], '─')
+        lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
+        walked = walked + 1
+        lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
+        walked = walked + 1
     elseif source_i < child_i then
-        lines[source_i] = add_edge(vim.fn.strcharlen(lines[source_i]) - 2, lines[source_i], '┐')
-        source_i = source_i + 1
         while source_i < child_i do
-            lines[source_i] = add_edge(vim.fn.strcharlen(lines[source_i]) - 2, lines[source_i], '│')
+            lines[source_i] = add_edge(starting_index + walked, lines[source_i], '┐')
             source_i = source_i + 1
+            lines[source_i] = add_edge(starting_index + walked, lines[source_i], '└')
+            walked = walked + 1
         end
-        lines[source_i] = add_edge(vim.fn.strcharlen(lines[source_i]) - 2, lines[source_i], '└')
-        lines[source_i] = add_edge(vim.fn.strcharlen(lines[source_i]) - 1, lines[source_i], '─')
+        lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
+        walked = walked + 1
     elseif source_i > child_i then
-        lines[source_i] = add_edge(vim.fn.strcharlen(lines[source_i]) - 2, lines[source_i], '┘')
-        source_i = source_i - 1
         while source_i > child_i do
-            lines[source_i] = add_edge(vim.fn.strcharlen(lines[source_i]) - 2, lines[source_i], '│')
+            lines[source_i] = add_edge(starting_index + walked, lines[source_i], '┘')
             source_i = source_i - 1
+            lines[source_i] = add_edge(starting_index + walked, lines[source_i], '┌')
+            walked = walked + 1
         end
-        lines[source_i] = add_edge(vim.fn.strcharlen(lines[source_i]) - 2, lines[source_i], '┌')
-        lines[source_i] = add_edge(vim.fn.strcharlen(lines[source_i]) - 1, lines[source_i], '─')
+        lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
+        walked = walked + 1
     end
+    return walked
 end
 
 A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
@@ -136,17 +140,40 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
         local layer_nodes = layer_to_node_keys[layer_index]
 
         -- We have written at least one full layer -> we can create connections to the next
+        local max_connection_width = 0 -- minimum width is 3
         if layer_index ~= 1 then
             local targets = layer_to_node_keys[layer_index]
             local sources = layer_to_node_keys[layer_index-1]
+            -- All lines should have the same starting width
+            local starting_index = vim.fn.strcharlen(lines[1])
             for source_i, source_key in pairs(sources) do
                 local source = key_to_node[source_key]
                 --P("source: " .. source.name .. " with " .. #source.children)
                 for _, child in pairs(source.children) do
                     --P("  " .. child.name)
                     if vim.tbl_contains(targets, child.key) then
-                        _add_connection(lines, source_i, get_value_index(targets, child.key))
+                        -- At the end I will have to extend all lenghts
+                        local con_width = _add_connection(lines, starting_index, source_i, get_value_index(targets, child.key))
+                        if max_connection_width < con_width then
+                            max_connection_width = con_width
+                        end
                     end
+                end
+            end
+
+            -- Make sure all lines have the same len
+            for i = 1, #lines do
+                local mynode_key = targets[i]
+                if mynode_key ~= nil then
+                    local filler = " "
+                    if mynode_key ~= "empty" then
+                        filler = "─"
+                    end
+
+                    while (vim.fn.strcharlen(lines[i]) < max_connection_width + starting_index) do
+                        lines[i] = lines[i] .. filler
+                    end
+
                 end
             end
         end
@@ -194,9 +221,9 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
         end
 
         for line_index = current_line, max_lines do
-            -- 2 square brackets and 3 for graph lines + 1 for exanded
+            -- 2 square brackets + 1 for exanded
             if layer_width[layer_index] then
-                for _ = 1, layer_width[layer_index]+6 do
+                for _ = 1, layer_width[layer_index]+ max_connection_width + 2 + 1 do
                   lines[line_index] = lines[line_index] .. " "
                 end
             end
