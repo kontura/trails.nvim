@@ -1,61 +1,63 @@
 describe("ascii_graph", function()
     local ag = require('trails.ascii_graph')
 
-    it("can count crossings", function()
-        assert.equals(0, ag.is_crossing(1, 1, 2, 2))
-        assert.equals(1, ag.is_crossing(1, 2, 2, 1))
-        assert.equals(1, ag.is_crossing(2, 1, 1, 2))
-        assert.equals(1, ag.is_crossing(1, 2, 2, 3))
-        assert.equals(1, ag.is_crossing(2, 3, 1, 2))
-        assert.equals(0, ag.is_crossing(1, 3, 4, 6))
-        assert.equals(0, ag.is_crossing(1, 3, 6, 4))
-        assert.equals(1, ag.is_crossing(1, 3, 6, 2))
-
-        -- When starting/ending in the same node there is no crossing, they get connected
-        assert.equals(0, ag.is_crossing(1, 3, 6, 3))
-        assert.equals(0, ag.is_crossing(9, 4, 1, 4))
-        assert.equals(0, ag.is_crossing(1, 1, 1, 1))
-        assert.equals(0, ag.is_crossing(1, 1, 1, 4))
-        assert.equals(0, ag.is_crossing(1, 3, 1, 4))
-        assert.equals(0, ag.is_crossing(1, 9, 1, 4))
-    end)
-
-    it("can count crossings between two layers", function()
-        local nodea1 = { key = "nodea1key", children = {}}
-        local nodea2 = { key = "nodea2key", children = {nodea1}}
+    it("can draw simple graph", function()
+        local nodeE = { name = "", key = "empty", children = {}, expanded = true}
+        local nodea1 = { name = "nodea1", key = "nodea1key", children = {}, expanded = true}
+        local nodea2 = { name = "nodea2", key = "nodea2key", children = {}, expanded = true}
+        local nodea3 = { name = "nodea3", key = "nodea3key", children = {}, expanded = true}
+        nodea1.children = { nodea2, nodea3 }
 
         local key_to_node = {}
-        key_to_node.nodea1key = nodea1
-        key_to_node.nodea2key = nodea2
+        key_to_node[nodea1.key] = nodea1
+        key_to_node[nodea2.key] = nodea2
+        key_to_node[nodea3.key] = nodea3
+        key_to_node[nodeE.key] = nodeE
 
         local layer_to_node_keys = {}
-        layer_to_node_keys[1] = {nodea2.key}
-        layer_to_node_keys[2] = {nodea1.key}
+        layer_to_node_keys[1] = {nodea1.key}
+        layer_to_node_keys[2] = {nodea3.key, nodeE.key, nodeE.key, nodea2.key}
 
-        assert.equals(0, ag.count_crossings(key_to_node, layer_to_node_keys))
+        local lines = {}
+        lines[1] = '[nodea1E]◄┬──────[nodea3E]'
+        lines[2] = '          └┐'
+        lines[3] = '           └┐'
+        lines[4] = '            └┐'
+        lines[5] = '             └┐'
+        lines[6] = '              └┐'
+        lines[7] = '               └─[nodea2E]'
 
-        local nodeb1 = { key = "nodeb1key", children = {}}
-        local nodeb2 = { key = "nodeb2key", children = {nodeb1}}
+        assert.are.same(lines, ag.draw_graph(key_to_node, "none", layer_to_node_keys))
 
-        key_to_node.nodeb1key = nodeb1
-        key_to_node.nodeb2key = nodeb2
+        layer_to_node_keys = {}
+        layer_to_node_keys[1] = {nodea1.key}
+        layer_to_node_keys[2] = {nodeE.key, nodea3.key, nodeE.key, nodeE.key, nodea2.key}
 
-        layer_to_node_keys[1] = {nodea2.key, nodeb2.key}
-        layer_to_node_keys[2] = {nodeb1.key, nodea1.key}
+        lines = {}
+        lines[1] = '[nodea1E]◄┐'
+        lines[2] = '          └┐'
+        lines[3] = '           └┬──────[nodea3E]'
+        lines[4] = '            └┐'
+        lines[5] = '             └┐'
+        lines[6] = '              └┐'
+        lines[7] = '               └┐'
+        lines[8] = '                └┐'
+        lines[9] = '                 └─[nodea2E]'
 
-        assert.equals(1, ag.count_crossings(key_to_node, layer_to_node_keys))
+        assert.are.same(lines, ag.draw_graph(key_to_node, "none", layer_to_node_keys))
     end)
 
-    it("can count crossings between multiple layers", function()
+    it("can draw graph", function()
         -- A1   B1   A3
         --      A2   B2
-        local nodea1 = { key = "nodea1key", children = {}}
-        local nodea2 = { key = "nodea2key", children = {}}
-        local nodea3 = { key = "nodea3key", children = {}}
-        nodea1.children = { nodea2 }
+        local nodeE = { name = "", key = "empty", children = {}, expanded = true}
+        local nodea1 = { name = "nodea1", key = "nodea1key", children = {}, expanded = true}
+        local nodea2 = { name = "nodea2", key = "nodea2key", children = {}, expanded = true}
+        local nodea3 = { name = "nodea3", key = "nodea3key", children = {}, expanded = true}
+        local nodeb1 = { name = "nodeb1", key = "nodeb1key", children = {}, expanded = true}
+        local nodeb2 = { name = "nodeb2", key = "nodeb2key", children = {}, expanded = true}
+        nodea1.children = { nodea2, nodeb1 }
         nodea2.children = { nodea3 }
-        local nodeb1 = { key = "nodeb1key", children = {}}
-        local nodeb2 = { key = "nodeb2key", children = {}}
         nodeb1.children = { nodeb2 }
 
         local key_to_node = {}
@@ -64,90 +66,94 @@ describe("ascii_graph", function()
         key_to_node[nodea3.key] = nodea3
         key_to_node[nodeb1.key] = nodeb1
         key_to_node[nodeb2.key] = nodeb2
+        key_to_node[nodeE.key] = nodeE
 
         local layer_to_node_keys = {}
         layer_to_node_keys[1] = {nodea1.key}
         layer_to_node_keys[2] = {nodeb1.key, nodea2.key}
         layer_to_node_keys[3] = {nodea3.key, nodeb2.key}
 
-        assert.equals(1, ag.count_crossings(key_to_node, layer_to_node_keys))
+        local lines = {}
+        lines[1] = '[nodea1E]◄┬──[nodeb1E]◄┐┌─[nodea3E]'
+        lines[2] = '          └┐           ├┤'
+        lines[3] = '           └─[nodea2E]◄┘└─[nodeb2E]'
+
+        assert.are.same(lines, ag.draw_graph(key_to_node, "none", layer_to_node_keys))
     end)
 
-    it("can count crossings between multiple layers2", function()
-        -- A1   B1   A3   B3
-        --      A2   B2   A4
-        local nodea1 = { key = "nodea1key", children = {}}
-        local nodea2 = { key = "nodea2key", children = {}}
-        local nodea3 = { key = "nodea3key", children = {}}
-        local nodea4 = { key = "nodea4key", children = {}}
+    it("can draw graph 2", function()
+        -- A1      A3
+        --     A2  A4
+        --         A5
+        local nodeE = { name = "", key = "empty", children = {}, expanded = true}
+        local nodea1 = { name = "nodea1", key = "nodea1key", children = {}, expanded = true}
+        local nodea2 = { name = "nodea2", key = "nodea2key", children = {}, expanded = true}
+        local nodea3 = { name = "nodea3", key = "nodea3key", children = {}, expanded = true}
+        local nodea4 = { name = "nodea4", key = "nodea4key", children = {}, expanded = true}
+        local nodea5 = { name = "nodea5", key = "nodea5key", children = {}, expanded = true}
         nodea1.children = { nodea2 }
-        nodea2.children = { nodea3 }
-        nodea3.children = { nodea4 }
-        local nodeb1 = { key = "nodeb1key", children = {}}
-        local nodeb2 = { key = "nodeb2key", children = {}}
-        local nodeb3 = { key = "nodeb3key", children = {}}
-        nodeb1.children = { nodeb2 }
-        nodeb2.children = { nodeb3 }
+        nodea2.children = { nodea3, nodea4, nodea5 }
 
         local key_to_node = {}
         key_to_node[nodea1.key] = nodea1
         key_to_node[nodea2.key] = nodea2
         key_to_node[nodea3.key] = nodea3
         key_to_node[nodea4.key] = nodea4
-        key_to_node[nodeb1.key] = nodeb1
-        key_to_node[nodeb2.key] = nodeb2
-        key_to_node[nodeb3.key] = nodeb3
+        key_to_node[nodea5.key] = nodea5
+        key_to_node[nodeE.key] = nodeE
 
         local layer_to_node_keys = {}
         layer_to_node_keys[1] = {nodea1.key}
-        layer_to_node_keys[2] = {nodeb1.key, nodea2.key}
-        layer_to_node_keys[3] = {nodea3.key, nodeb2.key}
-        layer_to_node_keys[4] = {nodeb3.key, nodea4.key}
+        layer_to_node_keys[2] = {nodeE.key, nodea2.key}
+        layer_to_node_keys[3] = {nodea3.key, nodea4.key, nodea5.key}
 
-        assert.equals(2, ag.count_crossings(key_to_node, layer_to_node_keys))
+        local lines = {}
+        lines[1] = '[nodea1E]◄┐             ┌─[nodea3E]'
+        lines[2] = '          └┐           ┌┘'
+        lines[3] = '           └─[nodea2E]◄┼──[nodea4E]'
+        lines[4] = '                       └┐'
+        lines[5] = '                        └─[nodea5E]'
+
+        assert.are.same(lines, ag.draw_graph(key_to_node, "none", layer_to_node_keys))
     end)
 
-    it("can count crossings between multiple layers with multiple nodes in layer", function()
-        -- A1   B1   A3   B3
-        --      A2   B2   C3
-        --      C1   C2   A4
-        local nodea1 = { key = "nodea1key", children = {}}
-        local nodea2 = { key = "nodea2key", children = {}}
-        local nodea3 = { key = "nodea3key", children = {}}
-        local nodea4 = { key = "nodea4key", children = {}}
-        nodea1.children = { nodea2 }
+    it("can draw graph 3", function()
+        -- A1      A3
+        --     A2
+        --     B1
+        local nodeE = { name = "", key = "empty", children = {}, expanded = true}
+        local nodea1 = { name = "nodea1", key = "nodea1key", children = {}, expanded = true}
+        local nodea2 = { name = "nodea2", key = "nodea2key", children = {}, expanded = true}
+        local nodea3 = { name = "nodea3", key = "nodea3key", children = {}, expanded = true}
+        local nodeb1 = { name = "nodeb1", key = "nodeb1key", children = {}, expanded = true}
+        nodea1.children = { nodea2, nodeb1 }
         nodea2.children = { nodea3 }
-        nodea3.children = { nodea4 }
-        local nodeb1 = { key = "nodeb1key", children = {}}
-        local nodeb2 = { key = "nodeb2key", children = {}}
-        local nodeb3 = { key = "nodeb3key", children = {}}
-        nodeb1.children = { nodeb2 }
-        nodeb2.children = { nodeb3 }
-
-        local nodec1 = { key = "nodec1key", children = {}}
-        local nodec2 = { key = "nodec2key", children = {}}
-        local nodec3 = { key = "nodec3key", children = {}}
-        nodec1.children = { nodec2 }
-        nodec2.children = { nodec3 }
+        nodeb1.children = { nodea3 }
 
         local key_to_node = {}
         key_to_node[nodea1.key] = nodea1
         key_to_node[nodea2.key] = nodea2
         key_to_node[nodea3.key] = nodea3
-        key_to_node[nodea4.key] = nodea4
         key_to_node[nodeb1.key] = nodeb1
-        key_to_node[nodeb2.key] = nodeb2
-        key_to_node[nodeb3.key] = nodeb3
-        key_to_node[nodec1.key] = nodec1
-        key_to_node[nodec2.key] = nodec2
-        key_to_node[nodec3.key] = nodec3
+        key_to_node[nodeE.key] = nodeE
 
         local layer_to_node_keys = {}
         layer_to_node_keys[1] = {nodea1.key}
-        layer_to_node_keys[2] = {nodeb1.key, nodea2.key, nodec1.key}
-        layer_to_node_keys[3] = {nodea3.key, nodeb2.key, nodec2.key}
-        layer_to_node_keys[4] = {nodeb3.key, nodec3.key, nodea4.key}
+        layer_to_node_keys[2] = {nodeE.key, nodeE.key, nodea2.key, nodeE.key, nodeb1.key}
+        layer_to_node_keys[3] = {nodea3.key}
 
-        assert.equals(4, ag.count_crossings(key_to_node, layer_to_node_keys))
+        local lines = {}
+        lines[1] = '[nodea1E]◄┐                     ┌─  ┌─[nodea3E]'
+        lines[2] = '          └┐                   ┌┘  ┌┘'
+        lines[3] = '           └┐                 ┌┘  ┌┘'
+        lines[4] = '            └┐               ┌┘  ┌┘'
+        lines[5] = '             └┬────[nodea2E]◄┘  ┌┘'
+        lines[6] = '              └┐               ┌┘'
+        lines[7] = '               └┐             ┌┘'
+        lines[8] = '                └┐           ┌┘'
+        lines[9] = '                 └─[nodeb1E]◄┘'
+
+        assert.are.same(lines, ag.draw_graph(key_to_node, "none", layer_to_node_keys))
     end)
+
 end)
