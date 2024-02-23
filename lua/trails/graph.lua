@@ -15,7 +15,14 @@ function G.print_tree(root, indent)
 
 end
 
-function G.create_node(name, kind, uri, detail, expanded, range, from_ranges, selectionRange, key, children)
+G.NodeType = {
+   Empty = {},
+   Connection = {},
+   Regular = {},
+}
+
+function G.create_node(name, kind, uri, detail, expanded, range, from_ranges, selectionRange, key, children, type)
+    type = type or G.NodeType.Regular
     return {
             name = name,
             kind = kind,
@@ -26,8 +33,14 @@ function G.create_node(name, kind, uri, detail, expanded, range, from_ranges, se
             range = range,
             from_ranges = from_ranges,
             selectionRange = selectionRange,
-            children = children
+            children = children,
+            type = type
     }
+end
+
+function G.create_connection_node(key, child)
+    local node = G.create_node("───", 0, "", "", true, {}, nil, nil, key, {child}, G.NodeType.Connection)
+    return node
 end
 
 function G.clone_node(node)
@@ -108,6 +121,8 @@ G.layout_graph = function(root, key_to_node)
         local source_clone = G.clone_node(v)
         key_to_node_with_fake[source_clone.key] = source_clone
     end
+    -- Insert just once empty node that can be used throughout the graph
+    key_to_node_with_fake.empty = {name="", children={}, key="empty", expanded = true, type = G.NodeType.Empty}
 
     -- Insert fake nodes
     for layer_index = 1, layer_count do
@@ -119,11 +134,11 @@ G.layout_graph = function(root, key_to_node)
                 local source = key_to_node_with_fake[source_key]
                 for _, child in pairs(source.children) do
                     if not vim.tbl_contains(targets, child.key) then
-                        local fake_node_key = source.key .. ".fake-child"
+                        local fake_node_key = "connection-" .. source.key
                         if not key_to_node_with_fake[fake_node_key] then
-                            local fake_node = G.create_node("───", 0, "", "", true, {}, nil, nil, fake_node_key, {child})
-                            key_to_node_with_fake[fake_node_key] = fake_node
-                            table.insert(source.children, fake_node)
+                            local connection_node = G.create_connection_node(fake_node_key, child)
+                            key_to_node_with_fake[fake_node_key] = connection_node
+                            table.insert(source.children, connection_node)
                             source.children = remove_node_by_key(source.children, child.key)
                             table.insert(layer_to_node_keys[layer_index], fake_node_key)
                         end
