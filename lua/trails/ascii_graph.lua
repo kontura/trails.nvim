@@ -145,21 +145,26 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
     local layer_width = {}
     local max_lines = 1
     local layer_count = #layer_to_node_keys
+    local padded_layer_to_node_keys = {}
     for layer_index = 1, layer_count do
         if layer_to_node_keys[layer_index] then
             layer_width[layer_index] = 0
             local layer_nodes = layer_to_node_keys[layer_index]
+            local padded_layer_node_keys = {}
             for _, node_key in pairs(layer_nodes) do
                 local mynode = key_to_node[node_key]
                 if vim.fn.strcharlen(mynode.name) > layer_width[layer_index] then
                     layer_width[layer_index] = vim.fn.strcharlen(mynode.name)
                 end
+                table.insert(padded_layer_node_keys, node_key)
+                table.insert(padded_layer_node_keys, "empty")
             end
-            if max_lines < #layer_nodes then
-                max_lines = #layer_nodes
+            padded_layer_to_node_keys[layer_index] = padded_layer_node_keys
+            if max_lines < #padded_layer_node_keys then
+                max_lines = #padded_layer_node_keys
             end
         else
-            layer_to_node_keys[layer_index] = {}
+            padded_layer_to_node_keys[layer_index] = {}
         end
     end
 
@@ -173,13 +178,13 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
     --G.print_tree(key_to_node[layer_to_node_keys[1][1]])
 
     for layer_index = 1, layer_count do
-        local layer_nodes = layer_to_node_keys[layer_index]
+        local layer_nodes = padded_layer_to_node_keys[layer_index]
 
         -- We have written at least one full layer -> we can create connections to the next
         local max_connection_width = 0 -- minimum width is 3
         if layer_index ~= 1 then
-            local targets = layer_to_node_keys[layer_index]
-            local sources = layer_to_node_keys[layer_index-1]
+            local targets = padded_layer_to_node_keys[layer_index]
+            local sources = padded_layer_to_node_keys[layer_index-1]
             -- All lines should have the same starting width
             local starting_index = vim.fn.strcharlen(lines[1])
             for source_i, source_key in pairs(sources) do
