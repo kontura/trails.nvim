@@ -58,6 +58,9 @@ local function replace_char(pos, str, r)
 end
 
 local function add_edge(pos, str, edge)
+    while (vim.fn.strcharlen(str) <= pos) do
+        str = str .. " "
+    end
     local current_edge = vim.fn.strgetchar(str, pos)
     local current_edge_bin = A.path_reverse_lookup[vim.fn.nr2char(current_edge)]
     -- In case we encounter unknown current edge/some other symbol that is not in the table
