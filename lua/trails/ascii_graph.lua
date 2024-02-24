@@ -1,5 +1,6 @@
 local A = {}
 local u = require("trails.utils")
+local g = require("trails.graph")
 
 -- UP=first bit, RIGHT=second bit, DOWN=third bit, LEFT=fourth bit
 A.path_lookup = {
@@ -98,40 +99,39 @@ end
 
 local draw_node = function(node, layer_width, active_node_key)
     local line = ""
-    local expanded = 'C'
-    if node.expanded then
-        expanded = 'E'
-    end
-    if (node.key == "empty") then
+
+    if (node.type == g.NodeType.Empty) then
         line = line .. " " ..  node.name .. " " .. " "
-    elseif node.name ~= "───" then
+    elseif (node.type == g.NodeType.Regular) then
+        local expanded = 'C'
+        if node.expanded then
+            expanded = 'E'
+        end
         if node.key == active_node_key then
             line = line .. "<" ..  node.name .. expanded .. ">"
         else
             line = line .. "[" ..  node.name .. expanded .. "]"
         end
-    else
-        --P(vim.fn.strcharlen(node.name) .. " is len of " .. node.name)
-        --P(#node.name)
+    elseif (node.type == g.NodeType.Connection) then
         line = line .. "─" ..  node.name .. "─" .. "─"
-    end
-    if vim.fn.strcharlen(node.name) < layer_width then
-        local current_name_len = vim.fn.strcharlen(node.name)
-        while current_name_len < layer_width do
-            if node.expanded and #node.children > 0 then
-                line = line .. '─'
-            else
-                line = line .. ' '
-            end
-            current_name_len = current_name_len + 1
-        end
+    else
+        error("Invalid NodeType for node: " .. vim.inspect(node))
     end
 
-    if node.expanded and #node.children > 0 then
-        -- if is not fake, TODO(amatej): maybe create a better condition if node.is_fake then
-        if node.name ~= "───" then
-            line = line .. '◄'
+    local current_name_len = vim.fn.strcharlen(node.name)
+    while current_name_len < layer_width do
+        if node.expanded and #node.children > 0 then
+            line = line .. '─'
         else
+            line = line .. ' '
+        end
+        current_name_len = current_name_len + 1
+    end
+
+    if #node.children > 0 then
+        if node.type == g.NodeType.Regular then
+            line = line .. '◄'
+        elseif node.type == g.NodeType.Connection then
             line = line .. '─'
         end
     else
