@@ -45,6 +45,107 @@ G.count_crossings = function(key_to_node, layer_to_node_keys)
     return crossings
 end
 
+local function shuffle(tbl)
+  for i = #tbl, 2, -1 do
+    local j = math.random(i)
+    tbl[i], tbl[j] = tbl[j], tbl[i]
+  end
+  return tbl
+end
+
+local function mutate_gene(layer)
+    if #layer > 1 then
+        if (math.random(16) == 1) then
+            local ii = math.random(#layer)
+            table.insert(layer, ii, "empty")
+        else
+            local ii = math.random(#layer)
+            local jj = math.random(#layer)
+            layer[ii], layer[jj] = layer[jj], layer[ii]
+        end
+    end
+    return layer
+end
+
+local function mate(layer_to_node_keys1, layer_to_node_keys2)
+    local child = {}
+    for layer_index = 1, #layer_to_node_keys1 do
+        local p = math.random(100)
+        if (p < 45) then
+            child[layer_index] = vim.deepcopy(layer_to_node_keys1[layer_index])
+        end
+        if (p < 90) then
+            child[layer_index] = vim.deepcopy(layer_to_node_keys2[layer_index])
+        end
+        if (p < 100) then
+            child[layer_index] = mutate_gene(vim.deepcopy(layer_to_node_keys1[layer_index]))
+        end
+    end
+
+    return child
+end
+
+function G.minimize_crossings_genetic(key_to_node, layer_to_node_keys)
+    local POPULATION_SIZE = 10
+    local population = {{gene = vim.deepcopy(layer_to_node_keys), fitness = 0}}
+    for _ = 1, POPULATION_SIZE do
+        local individual = {gene = vim.deepcopy(layer_to_node_keys), fitness = 0}
+        for _, layer in pairs(individual.gene) do
+            shuffle(layer)
+        end
+
+        table.insert(population, individual)
+    end
+
+    -- calculate fitness for all individuals
+    for i = 1, #population do
+        population[i].fitness = G.count_crossings(key_to_node, population[i].gene)
+        --P("Set fitness: " .. population[i].fitness)
+        if population[i].fitness == 0 then
+            --P("Returning genom 0")
+            return population[i].gene
+        end
+    end
+
+    -- EXAMPLE 40 iterations loop
+    for _ = 1, 40 do
+        table.sort(population, function(left, right)
+            return left.fitness < right.fitness
+        end)
+
+        local new_generation = {}
+        local s = (10*POPULATION_SIZE)/100;
+        for i = 1, s do
+            table.insert(new_generation, vim.deepcopy(population[i]))
+        end
+
+        -- From 50% of fittest population, Individuals will mate to produce offspring
+        s = (90*POPULATION_SIZE)/100;
+        local half = POPULATION_SIZE/2
+        for _ = 1, s do
+            local j = math.random(half)
+            local i = math.random(half)
+            local child = mate(population[j].gene, population[i].gene)
+            local individual = {gene = child, fitness = 0}
+            table.insert(new_generation, individual)
+        end
+
+        population = new_generation
+
+        for i = 1, #population do
+            population[i].fitness = 5*G.count_crossings(key_to_node, population[i].gene)
+            --P("Set fitness: " .. population[i].fitness)
+            if population[i].fitness == 0 then
+                return population[i].gene
+            end
+        end
+    end
+
+    --P("Best fitness: " .. population[1].fitness)
+    --P(population[1].gene)
+    return population[1].gene
+end
+
 function G.print_tree(root, indent)
     indent = indent or ""
     print(indent .. root.key)
@@ -189,6 +290,8 @@ G.layout_graph = function(root, key_to_node)
             end
         end
     end
+
+    layer_to_node_keys = G.minimize_crossings_genetic(key_to_node_with_fake, layer_to_node_keys)
 
     -- Wrap all of these into a graph table
     return layer_to_node_keys, key_to_node_with_fake
