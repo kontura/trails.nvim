@@ -140,7 +140,7 @@ describe("ascii_graph", function()
         layer_to_node_keys[3] = {nodea3.key}
 
         local lines = {}
-        lines[1] = '[nodea1E]◄┐                     ┌─  ┌─[nodea3E]'
+        lines[1] = '[nodea1E]◄┐                     ┌───┬─[nodea3E]'
         lines[2] = '          └┐                   ┌┘  ┌┘'
         lines[3] = '           └┐                 ┌┘  ┌┘'
         lines[4] = '            └┐               ┌┘  ┌┘'

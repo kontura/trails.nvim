@@ -68,7 +68,7 @@ local function add_edge(pos, str, edge)
 end
 
 -- By default all edges go just straight we have to figure out what to do here
-local function _add_connection(lines, starting_index, source_i, child_i)
+local function _add_connection(lines, starting_index, source_i, child_i, connection_layer_widht)
     local walked = 0
     if source_i == child_i then
         lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
@@ -91,6 +91,10 @@ local function _add_connection(lines, starting_index, source_i, child_i)
             lines[source_i] = add_edge(starting_index + walked, lines[source_i], '┌')
             walked = walked + 1
         end
+        lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
+        walked = walked + 1
+    end
+    while (walked <= connection_layer_widht) do
         lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
         walked = walked + 1
     end
@@ -178,23 +182,34 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
         local layer_nodes = padded_layer_to_node_keys[layer_index]
 
         -- We have written at least one full layer -> we can create connections to the next
-        local max_connection_width = 0 -- minimum width is 3
+        local connection_layer_widht = 0
         if layer_index ~= 1 then
             local targets = padded_layer_to_node_keys[layer_index]
             local sources = padded_layer_to_node_keys[layer_index-1]
             -- All lines should have the same starting width
             local starting_index = vim.fn.strcharlen(lines[1])
+
+            -- Compute connection layer width
+            for source_i, source_key in pairs(sources) do
+                local source = key_to_node[source_key]
+                for _, child in pairs(source.children) do
+                    local child_i = u.get_value_index(targets, child.key)
+                    if child_i ~= -1 then
+                        if connection_layer_widht < math.abs(source_i - child_i) then
+                            connection_layer_widht = math.abs(source_i - child_i)
+                        end
+                    end
+                end
+            end
+
             for source_i, source_key in pairs(sources) do
                 local source = key_to_node[source_key]
                 --P("source: " .. source.name .. " with " .. #source.children)
                 for _, child in pairs(source.children) do
-                    --P("  " .. child.name)
-                    if vim.tbl_contains(targets, child.key) then
+                    local child_i = u.get_value_index(targets, child.key)
+                    if child_i ~= -1 then
                         -- At the end I will have to extend all lenghts
-                        local con_width = _add_connection(lines, starting_index, source_i, u.get_value_index(targets, child.key))
-                        if max_connection_width < con_width then
-                            max_connection_width = con_width
-                        end
+                        _add_connection(lines, starting_index, source_i, child_i, connection_layer_widht)
                     end
                 end
             end
@@ -208,7 +223,7 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
                         filler = "─"
                     end
 
-                    while (vim.fn.strcharlen(lines[i]) < max_connection_width + starting_index) do
+                    while (vim.fn.strcharlen(lines[i]) <= connection_layer_widht + starting_index) do
                         lines[i] = lines[i] .. filler
                     end
 
@@ -227,7 +242,7 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
         for line_index = current_line, max_lines do
             -- 2 square brackets + 1 for exanded
             if layer_width[layer_index] then
-                for _ = 1, layer_width[layer_index]+ max_connection_width + 2 + 1 do
+                for _ = 1, layer_width[layer_index]+ connection_layer_widht + 2 + 1 do
                   lines[line_index] = lines[line_index] .. " "
                 end
             end
