@@ -54,15 +54,13 @@ local function shuffle(tbl)
 end
 
 local function mutate_gene(layer)
-    if #layer > 1 then
-        if (math.random(16) == 1) then
-            local ii = math.random(#layer)
-            table.insert(layer, ii, "empty")
-        else
-            local ii = math.random(#layer)
-            local jj = math.random(#layer)
-            layer[ii], layer[jj] = layer[jj], layer[ii]
-        end
+    if (math.random(16) == 1) then
+        local ii = math.random(#layer)
+        table.insert(layer, ii, "empty")
+    else
+        local ii = math.random(#layer)
+        local jj = math.random(#layer)
+        layer[ii], layer[jj] = layer[jj], layer[ii]
     end
     return layer
 end
