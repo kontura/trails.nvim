@@ -102,6 +102,7 @@ local incomingCallsRoothandler = function(err, result, ctx, config)
             local node = g.create_node(c.name, c.kind, c.uri, c.detail, false,
                                        c.range, c_full["fromRange"],
                                        c.selectionRange, g.make_key(c.name, c.uri), {})
+            node.data = c.data
             M.key_to_node[node.key] = node
             table.insert(root.children, node)
         end
@@ -124,6 +125,7 @@ local handler = function(err, result, ctx, config)
             node = g.create_node(c.name, c.kind, c.uri, c.detail, false,
                                  c.range, c_full["fromRange"],
                                  c.selectionRange, node_key, {})
+            node.data = c.data
             M.key_to_node[node_key] = node
         end
         table.insert(parent.children, node)
