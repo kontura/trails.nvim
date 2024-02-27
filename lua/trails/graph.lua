@@ -75,7 +75,7 @@ local function mate(layer_to_node_keys1, layer_to_node_keys2)
         if (p < 90) then
             child[layer_index] = vim.deepcopy(layer_to_node_keys2[layer_index])
         end
-        if (p < 100) then
+        if (p <= 100) then
             child[layer_index] = mutate_gene(vim.deepcopy(layer_to_node_keys1[layer_index]))
         end
     end
