@@ -45,6 +45,25 @@ G.count_crossings = function(key_to_node, layer_to_node_keys)
     return crossings
 end
 
+G.count_len = function(key_to_node, layer_to_node_keys)
+    local layer_count = #layer_to_node_keys
+    local len = 0
+
+    for layer_index = 2, layer_count do
+        local targets = layer_to_node_keys[layer_index]
+        local sources = layer_to_node_keys[layer_index-1]
+        for sourceA_i, source_key in pairs(sources) do
+            local sourceA = key_to_node[source_key]
+            for _, childA in pairs(sourceA.children) do
+                local tartgetA_i = u.get_value_index(targets, childA.key)
+                len = len + math.abs(sourceA_i - tartgetA_i)
+            end
+        end
+    end
+
+    return len
+end
+
 local function shuffle(tbl)
   for i = #tbl, 2, -1 do
     local j = math.random(i)
@@ -97,7 +116,7 @@ function G.minimize_crossings_genetic(key_to_node, layer_to_node_keys)
 
     -- calculate fitness for all individuals
     for i = 1, #population do
-        population[i].fitness = G.count_crossings(key_to_node, population[i].gene)
+        population[i].fitness = 5*G.count_crossings(key_to_node, population[i].gene) + G.count_len(key_to_node, population[i].gene)
         --P("Set fitness: " .. population[i].fitness)
         if population[i].fitness == 0 then
             --P("Returning genom 0")
@@ -131,7 +150,7 @@ function G.minimize_crossings_genetic(key_to_node, layer_to_node_keys)
         population = new_generation
 
         for i = 1, #population do
-            population[i].fitness = 5*G.count_crossings(key_to_node, population[i].gene)
+            population[i].fitness = 5*G.count_crossings(key_to_node, population[i].gene) + G.count_len(key_to_node, population[i].gene)
             --P("Set fitness: " .. population[i].fitness)
             if population[i].fitness == 0 then
                 return population[i].gene
