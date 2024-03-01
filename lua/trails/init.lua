@@ -138,7 +138,6 @@ end
 
 M.setup = function(opts)
     vim.lsp.handlers['callHierarchy/incomingCalls'] = vim.lsp.with(incomingCallsRoothandler, {})
-    vim.api.nvim_command('highlight default TrailsActiveNode gui=bold cterm=bold')
     M.namespace_id = vim.api.nvim_create_namespace('HihglightTrailsNamespace')
 end
 
@@ -174,7 +173,7 @@ M.print_lines_to_buffer = function(buf, lines, active_node_pos)
                                  active_node_pos.start,
                                  {end_row = active_node_pos.line,
                                   end_col = active_node_pos.start + active_node_pos.len,
-                                  hl_group='TrailsActiveNode'})
+                                  hl_group='Function'})
 end
 
 
