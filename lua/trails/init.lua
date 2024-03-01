@@ -21,6 +21,12 @@ function M.open_split()
     vim.api.nvim_buf_set_keymap(M.buf, "n", "h", ":lua require'trails'.move_focus('h')<cr>", {silent = true})
     vim.api.nvim_buf_set_keymap(M.buf, "n", "j", ":lua require'trails'.move_focus('j')<cr>", {silent = true})
     vim.api.nvim_buf_set_keymap(M.buf, "n", "k", ":lua require'trails'.move_focus('k')<cr>", {silent = true})
+    vim.api.nvim_buf_set_keymap(M.buf, "n", "gd", ":lua require'trails'.jump_to_focused()<cr>", {silent = true})
+end
+
+function M.jump_to_focused(dir)
+    local focused_node_key = M.layer_to_node_keys[M.focused_node_key_index[1]][M.focused_node_key_index[2]]
+    vim.lsp.util.jump_to_location(M.key_to_node[focused_node_key], "utf-8", true)
 end
 
 function M.move_focus(dir)
