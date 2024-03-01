@@ -101,7 +101,7 @@ local function _add_connection(lines, starting_index, source_i, child_i, connect
     return walked
 end
 
-local draw_node = function(node, layer_width, active_node_key)
+local draw_node = function(node, layer_width)
     local line = ""
 
     if (node.type == g.NodeType.Empty) then
@@ -111,11 +111,7 @@ local draw_node = function(node, layer_width, active_node_key)
         if node.expanded then
             expanded = 'E'
         end
-        if node.key == active_node_key then
-            line = line .. "<" ..  node.name .. expanded .. ">"
-        else
-            line = line .. "[" ..  node.name .. expanded .. "]"
-        end
+        line = line .. "[" ..  node.name .. expanded .. "]"
     elseif (node.type == g.NodeType.Connection) then
         line = line .. "─" ..  node.name .. "─" .. "─"
     else
@@ -178,6 +174,8 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
         table.insert(lines, "")
     end
 
+    local active_node_pos = {}
+
     for layer_index = 1, layer_count do
         local layer_nodes = padded_layer_to_node_keys[layer_index]
 
@@ -235,7 +233,16 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
         for _, node_key in pairs(layer_nodes) do
             local mynode = key_to_node[node_key]
 
-            lines[current_line] = lines[current_line] .. draw_node(mynode, layer_width[layer_index], active_node_key)
+            if mynode.key == active_node_key then
+                active_node_pos.line = current_line - 1 -- lines index from 0
+                active_node_pos.start = #lines[current_line]
+            end
+
+            lines[current_line] = lines[current_line] .. draw_node(mynode, layer_width[layer_index])
+
+            if mynode.key == active_node_key then
+                active_node_pos.len = #mynode.name + 2 + 1 - 1 -- +2 for brackets + 1 for EXPANDED - 1 to fix zero based indexing
+            end
             current_line = current_line + 1
         end
 
@@ -253,7 +260,7 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
         lines[i] = rtrim(lines[i])
     end
 
-    return lines
+    return lines, active_node_pos
 end
 
 return A
