@@ -241,7 +241,7 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
             lines[current_line] = lines[current_line] .. draw_node(mynode, layer_width[layer_index])
 
             if mynode.key == active_node_key then
-                active_node_pos.len = #mynode.name + 2 + 1 - 1 -- +2 for brackets + 1 for EXPANDED - 1 to fix zero based indexing
+                active_node_pos.len = #mynode.name + 2 + 1 -- +2 for brackets + 1 for EXPANDED
             end
             current_line = current_line + 1
         end
