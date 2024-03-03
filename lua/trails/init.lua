@@ -37,54 +37,13 @@ function M.move_focus(dir)
     if dir == 'l' and not focused_node.expanded then
         M.expand_node(focused_node)
     else
-        local get_next = function(d, index)
-            if d == 'l' then
-                index[1] = index[1] + 1
-            elseif d == 'h' then
-                index[1] = index[1] - 1
-            elseif d == 'j' then
-                index[2] = index[2] + 1
-            elseif d == 'k' then
-                index[2] = index[2] - 1
-            end
-        end
-
-        local is_out_of_bounds = function(index)
-            if index[1] < 1 then
-                return true
-            end
-            if index[2] < 1 then
-                return true
-            end
-            local layer_count = #M.layer_to_node_keys
-            if index[1] > layer_count then
-                return true
-            end
-            local count_in_layer = #M.layer_to_node_keys[index[1]]
-            if index[2] > count_in_layer then
-                return true
-            end
-
-            return false
-        end
-
-        local index = vim.deepcopy(M.focused_node_key_index)
-        get_next(dir, index)
-        if is_out_of_bounds(index) then
-            return
-        end
-        local new_focused_node_key = M.layer_to_node_keys[index[1]][index[2]]
-        local new_focused_node = M.key_to_node_with_fake[new_focused_node_key]
-
-        while new_focused_node.type ~= g.NodeType.Regular do
-            get_next(dir, index)
-            if is_out_of_bounds(index) then
-                return
-            end
-            new_focused_node_key = M.layer_to_node_keys[index[1]][index[2]]
-            new_focused_node = M.key_to_node_with_fake[new_focused_node_key]
-        end
-        M.focused_node_key_index = index
+        local moved = mv.graph_move(M.layer_to_node_keys,
+                                    M.key_to_node_with_fake,
+                                    dir,
+                                    M.focused_node_key_index_start,
+                                    M.focused_node_key_index_end)
+        M.focused_node_key_index_start = moved[1]
+        M.focused_node_key_index_end = moved[2]
     end
 
     local new_focused_node_key_start = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
