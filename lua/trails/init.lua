@@ -1,6 +1,7 @@
 local M = {
     root = nil,
-    focused_node_key_index = {1, 1}, -- x,y (layer_index, node_index in layer)
+    focused_node_key_index_start = {1, 1}, -- x,y (layer_index, node_index in layer)
+    focused_node_key_index_end = {1, 1}, -- x,y (layer_index, node_index in layer)
     win = nil,
     buf = nil,
     key_to_node = {},
@@ -9,6 +10,7 @@ local M = {
 
 local g = require("trails.graph")
 local a = require("trails.ascii_graph")
+local mv = require("trails.graph_move")
 
 function M.open_split()
     vim.cmd('below split')
@@ -24,14 +26,14 @@ function M.open_split()
     vim.api.nvim_buf_set_keymap(M.buf, "n", "gd", ":lua require'trails'.jump_to_focused()<cr>", {silent = true})
 end
 
-function M.jump_to_focused(dir)
-    local focused_node_key = M.layer_to_node_keys[M.focused_node_key_index[1]][M.focused_node_key_index[2]]
+function M.jump_to_focused()
+    local focused_node_key = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
     vim.lsp.util.jump_to_location(M.key_to_node[focused_node_key], "utf-8", true)
 end
 
 function M.move_focus(dir)
-    local focused_node_key = M.layer_to_node_keys[M.focused_node_key_index[1]][M.focused_node_key_index[2]]
-    local focused_node = M.key_to_node[focused_node_key]
+    local focused_node_key_start = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
+    local focused_node = M.key_to_node[focused_node_key_start]
     if dir == 'l' and not focused_node.expanded then
         M.expand_node(focused_node)
     else
@@ -85,8 +87,9 @@ function M.move_focus(dir)
         M.focused_node_key_index = index
     end
 
-    local new_focused_node_key = M.layer_to_node_keys[M.focused_node_key_index[1]][M.focused_node_key_index[2]]
-    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, new_focused_node_key, M.layer_to_node_keys))
+    local new_focused_node_key_start = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
+    local new_focused_node_key_end = M.layer_to_node_keys[M.focused_node_key_index_end[1]][M.focused_node_key_index_end[2]]
+    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, new_focused_node_key_start, new_focused_node_key_end, M.layer_to_node_keys))
 end
 
 -- Called just once when the graph is first created.
@@ -102,7 +105,6 @@ local incomingCallsRoothandler = function(err, result, ctx, config)
                 }
         }, nil, nil, g.make_key(root_name, params.textDocument.uri), {})
         M.key_to_node[root.key] = root
-        M.focused_node_key_index = {1, 1}
         for _, c_full in ipairs(result) do
             local c = c_full["from"]
             local node = g.create_node(c.name, c.kind, c.uri, c.detail, false,
@@ -117,8 +119,15 @@ local incomingCallsRoothandler = function(err, result, ctx, config)
     end
     M.open_split()
     M.layer_to_node_keys, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
-    local focused_node_key = M.layer_to_node_keys[M.focused_node_key_index[1]][M.focused_node_key_index[2]]
-    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys))
+
+    local first_non_empty_node_index = 1
+    while (M.key_to_node_with_fake[M.layer_to_node_keys[1][first_non_empty_node_index]].type ~= g.NodeType.Regular) do
+        first_non_empty_node_index = first_non_empty_node_index + 1
+    end
+    M.focused_node_key_index_start = {1, first_non_empty_node_index}
+    M.focused_node_key_index_end = {1, first_non_empty_node_index}
+    local focused_node_key = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
+    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key, focused_node_key, M.layer_to_node_keys))
 end
 
 local handler = function(err, result, ctx, config)
@@ -138,8 +147,9 @@ local handler = function(err, result, ctx, config)
     end
     parent.expanded = true
     M.layer_to_node_keys, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
-    local focused_node_key = M.layer_to_node_keys[M.focused_node_key_index[1]][M.focused_node_key_index[2]]
-    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key, M.layer_to_node_keys))
+    local focused_node_key_start = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
+    local focused_node_key_end = M.layer_to_node_keys[M.focused_node_key_index_end[1]][M.focused_node_key_index_end[2]]
+    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key_start, focused_node_key_end, M.layer_to_node_keys))
 end
 
 M.setup = function(opts)

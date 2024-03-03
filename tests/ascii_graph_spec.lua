@@ -24,7 +24,7 @@ describe("ascii_graph", function()
         lines[2] = '          └┐'
         lines[3] = '           └─[nodea2E]'
 
-        assert.are.same(lines, ag.draw_graph(key_to_node, "none", layer_to_node_keys))
+        assert.are.same(lines, ag.draw_graph(key_to_node, "none", "none", layer_to_node_keys))
 
         layer_to_node_keys = {}
         layer_to_node_keys[1] = {nodea1.key}
@@ -41,7 +41,7 @@ describe("ascii_graph", function()
         lines[8] = '                └┐'
         lines[9] = '                 └─[nodea2E]'
 
-        assert.are.same(lines, ag.draw_graph(key_to_node, "none", layer_to_node_keys))
+        assert.are.same(lines, ag.draw_graph(key_to_node, "none", "none", layer_to_node_keys))
     end)
 
     it("can draw graph", function()
@@ -75,7 +75,7 @@ describe("ascii_graph", function()
         lines[2] = '          └┐           ├┤'
         lines[3] = '           └─[nodea2E]◄┘└─[nodeb2E]'
 
-        assert.are.same(lines, ag.draw_graph(key_to_node, "none", layer_to_node_keys))
+        assert.are.same(lines, ag.draw_graph(key_to_node, "none", "none", layer_to_node_keys))
     end)
 
     it("can draw graph 2", function()
@@ -111,7 +111,7 @@ describe("ascii_graph", function()
         lines[4] = '                       └┐'
         lines[5] = '                        └─[nodea5E]'
 
-        assert.are.same(lines, ag.draw_graph(key_to_node, "none", layer_to_node_keys))
+        assert.are.same(lines, ag.draw_graph(key_to_node, "none", "none", layer_to_node_keys))
     end)
 
     it("can draw graph 3", function()
@@ -150,7 +150,7 @@ describe("ascii_graph", function()
         lines[8] = '                └┐           ┌┘'
         lines[9] = '                 └─[nodeb1E]◄┘'
 
-        assert.are.same(lines, ag.draw_graph(key_to_node, "none", layer_to_node_keys))
+        assert.are.same(lines, ag.draw_graph(key_to_node, "none", "none", layer_to_node_keys))
     end)
 
 end)

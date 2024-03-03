@@ -141,7 +141,7 @@ local draw_node = function(node, layer_width)
     return line
 end
 
-A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
+A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_node_keys)
     local layer_width = {}
     local max_lines = 1
     local layer_count = #layer_to_node_keys
@@ -233,14 +233,14 @@ A.draw_graph = function(key_to_node, active_node_key, layer_to_node_keys)
         for _, node_key in pairs(layer_nodes) do
             local mynode = key_to_node[node_key]
 
-            if mynode.key == active_node_key then
                 active_node_pos.line = current_line - 1 -- lines index from 0
+            if mynode.key == active_key_start and mynode.key == active_key_end then
                 active_node_pos.start = #lines[current_line]
             end
 
             lines[current_line] = lines[current_line] .. draw_node(mynode, layer_width[layer_index])
 
-            if mynode.key == active_node_key then
+            if mynode.key == active_key_start and mynode.key == active_key_end then
                 active_node_pos.len = #mynode.name + 2 + 1 -- +2 for brackets + 1 for EXPANDED
             end
             current_line = current_line + 1
