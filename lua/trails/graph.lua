@@ -223,6 +223,16 @@ function G.clone_node(node)
     )
 end
 
+G.has_child_with_key = function(parent, candidate_child_key)
+    for _, child in ipairs(parent.children) do
+        if child.key == candidate_child_key then
+            return true
+        end
+    end
+
+    return false
+end
+
 local remove_node_by_key = function(list, item)
     local new_list = {}
     for _, i in ipairs(list) do
