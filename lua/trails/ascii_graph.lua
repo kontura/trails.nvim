@@ -245,15 +245,6 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
             end
             current_line = current_line + 1
         end
-
-        for line_index = current_line, max_lines do
-            -- 2 square brackets + 1 for exanded
-            if layer_width[layer_index] then
-                for _ = 1, layer_width[layer_index]+ connection_layer_widht + 2 + 1 do
-                  lines[line_index] = lines[line_index] .. " "
-                end
-            end
-        end
     end
 
     for i = 1, #lines do
