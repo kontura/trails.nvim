@@ -199,6 +199,9 @@ end
 
 function G.create_connection_node(key, child)
     local node = G.create_node("───", 0, "", "", true, {}, nil, nil, key, {child}, G.NodeType.Connection)
+    -- node.children can get changed if we connect to another connection node but we want
+    -- to keep key of the real target node (for highlighting).
+    node.connecting_to = child.key
     return node
 end
 

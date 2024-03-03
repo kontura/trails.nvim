@@ -67,78 +67,59 @@ local function add_edge(pos, str, edge)
     return str
 end
 
+local function add_active_segment(active_positions, line, start, len)
+    local active_segment = {}
+    active_segment.line = line
+    active_segment.start = start
+    active_segment.len = len
+    if active_positions ~= nil then
+        table.insert(active_positions, active_segment)
+    end
+end
+
 -- By default all edges go just straight we have to figure out what to do here
-local function _add_connection(lines, starting_index, source_i, child_i, connection_layer_widht)
+local function add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, active_positions)
     local walked = 0
     if source_i == child_i then
         lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
         walked = walked + 1
         lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
         walked = walked + 1
+        add_active_segment(active_positions, source_i, vim.str_byteindex(lines[source_i], starting_index + walked - 2), #'─'*2)
     elseif source_i < child_i then
         while source_i < child_i do
             lines[source_i] = add_edge(starting_index + walked, lines[source_i], '┐')
+            add_active_segment(active_positions, source_i, vim.str_byteindex(lines[source_i], starting_index + walked), #'┐')
             source_i = source_i + 1
             lines[source_i] = add_edge(starting_index + walked, lines[source_i], '└')
+            add_active_segment(active_positions, source_i, vim.str_byteindex(lines[source_i], starting_index + walked), #'└')
             walked = walked + 1
         end
         lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
+        add_active_segment(active_positions, source_i, vim.str_byteindex(lines[source_i], starting_index + walked), #'─')
         walked = walked + 1
     elseif source_i > child_i then
         while source_i > child_i do
             lines[source_i] = add_edge(starting_index + walked, lines[source_i], '┘')
+            add_active_segment(active_positions, source_i, vim.str_byteindex(lines[source_i], starting_index + walked), #'┘')
             source_i = source_i - 1
             lines[source_i] = add_edge(starting_index + walked, lines[source_i], '┌')
+            add_active_segment(active_positions, source_i, vim.str_byteindex(lines[source_i], starting_index + walked), #'┌')
             walked = walked + 1
         end
         lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
+        add_active_segment(active_positions, source_i, vim.str_byteindex(lines[source_i], starting_index + walked), #'─')
         walked = walked + 1
     end
+
+
+    local hi_start = starting_index + walked
     while (walked <= connection_layer_widht) do
         lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
         walked = walked + 1
     end
+    add_active_segment(active_positions, source_i, vim.str_byteindex(lines[source_i], hi_start), #'─'*(starting_index + walked - hi_start))
     return walked
-end
-
-local draw_node = function(node, layer_width)
-    local line = ""
-
-    if (node.type == g.NodeType.Empty) then
-        line = line .. " " ..  node.name .. " " .. " "
-    elseif (node.type == g.NodeType.Regular) then
-        local expanded = 'C'
-        if node.expanded then
-            expanded = 'E'
-        end
-        line = line .. "[" ..  node.name .. expanded .. "]"
-    elseif (node.type == g.NodeType.Connection) then
-        line = line .. "─" ..  node.name .. "─" .. "─"
-    else
-        error("Invalid NodeType for node: " .. vim.inspect(node))
-    end
-
-    local current_name_len = vim.fn.strcharlen(node.name)
-    while current_name_len < layer_width do
-        if node.expanded and #node.children > 0 then
-            line = line .. '─'
-        else
-            line = line .. ' '
-        end
-        current_name_len = current_name_len + 1
-    end
-
-    if #node.children > 0 then
-        if node.type == g.NodeType.Regular then
-            line = line .. '◄'
-        elseif node.type == g.NodeType.Connection then
-            line = line .. '─'
-        end
-    else
-        line = line .. ' '
-    end
-
-    return line
 end
 
 A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_node_keys)
@@ -174,7 +155,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
         table.insert(lines, "")
     end
 
-    local active_node_pos = {}
+    local active_positions = {}
 
     for layer_index = 1, layer_count do
         local layer_nodes = padded_layer_to_node_keys[layer_index]
@@ -206,18 +187,22 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
                 for _, child in pairs(source.children) do
                     local child_i = u.get_value_index(targets, child.key)
                     if child_i ~= -1 then
-                        -- At the end I will have to extend all lenghts
-                        _add_connection(lines, starting_index, source_i, child_i, connection_layer_widht)
+                        if (vim.endswith(source_key, active_key_start) and child.key == active_key_end) or
+                           (vim.endswith(source_key, active_key_start) and child.connecting_to == active_key_end) then
+                            add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, active_positions)
+                        else
+                            add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, nil)
+                        end
                     end
                 end
             end
 
             -- Make sure all lines have the same len
             for i = 1, #lines do
-                local mynode_key = targets[i]
-                if mynode_key ~= nil then
+                local target_key = targets[i]
+                if target_key ~= nil then
                     local filler = " "
-                    if mynode_key ~= "empty" then
+                    if target_key ~= "empty" then
                         filler = "─"
                     end
 
@@ -233,16 +218,58 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
         for _, node_key in pairs(layer_nodes) do
             local mynode = key_to_node[node_key]
 
-                active_node_pos.line = current_line - 1 -- lines index from 0
+            -- Highligh name
             if mynode.key == active_key_start and mynode.key == active_key_end then
-                active_node_pos.start = #lines[current_line]
+                add_active_segment(active_positions, current_line, #lines[current_line], #mynode.name + 2 + 1) -- +2 for brackets + 1 for EXPANDED
             end
 
-            lines[current_line] = lines[current_line] .. draw_node(mynode, layer_width[layer_index])
 
-            if mynode.key == active_key_start and mynode.key == active_key_end then
-                active_node_pos.len = #mynode.name + 2 + 1 -- +2 for brackets + 1 for EXPANDED
+            if (mynode.type == g.NodeType.Empty) then
+                lines[current_line] = lines[current_line] .. " " ..  mynode.name .. " " .. " "
+            elseif (mynode.type == g.NodeType.Regular) then
+                local expanded = 'C'
+                if mynode.expanded then
+                    expanded = 'E'
+                end
+                lines[current_line] = lines[current_line] .. "[" ..  mynode.name .. expanded .. "]"
+            elseif (mynode.type == g.NodeType.Connection) then
+                local before_name_start = #lines[current_line]
+                lines[current_line] = lines[current_line] .. "─" ..  mynode.name .. "─" .. "─"
+                if (vim.endswith(mynode.key, active_key_start) and mynode.connecting_to == active_key_end) then
+                    add_active_segment(active_positions, current_line, before_name_start, #lines[current_line] - before_name_start)
+                end
+            else
+                error("Invalid NodeType for node: " .. vim.inspect(mynode))
             end
+
+
+            local after_name_start = #lines[current_line]
+
+            if #mynode.children > 0 then
+                if mynode.type == g.NodeType.Regular then
+                    lines[current_line] = lines[current_line] .. '◄'
+                elseif mynode.type == g.NodeType.Connection then
+                    lines[current_line] = lines[current_line] .. '─'
+                end
+            else
+                lines[current_line] = lines[current_line] .. ' '
+            end
+
+            local current_name_len = vim.fn.strcharlen(mynode.name)
+            while current_name_len < layer_width[layer_index] do
+                if mynode.expanded and #mynode.children > 0 then
+                    lines[current_line] = lines[current_line] .. '─'
+                else
+                    lines[current_line] = lines[current_line] .. ' '
+                end
+                current_name_len = current_name_len + 1
+            end
+
+            if (mynode.key == active_key_start and mynode.key ~= active_key_end) or
+               (vim.endswith(mynode.key, active_key_start) and mynode.connecting_to == active_key_end) then
+                add_active_segment(active_positions, current_line, after_name_start, #lines[current_line] - after_name_start)
+            end
+
             current_line = current_line + 1
         end
     end
@@ -251,7 +278,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
         lines[i] = rtrim(lines[i])
     end
 
-    return lines, active_node_pos
+    return lines, active_positions
 end
 
 return A
