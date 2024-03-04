@@ -3,6 +3,19 @@ local MV = {}
 local g = require("trails.graph")
 local u = require("trails.utils")
 
+local get_parent_with_index_from_list = function(key_to_node, list, child_key)
+    for parent_i, parent_key in ipairs(list) do
+        local parent = key_to_node[parent_key]
+        for _, ch in ipairs(parent.children) do
+            if ch.key == child_key then
+                return parent, parent_i
+            end
+        end
+    end
+    error("Child not found in previous layer, INVALID GRAPH")
+
+end
+
 MV.graph_move = function(layer_to_node_keys, key_to_node, dir, index_start, index_end)
     local get_next = function(d, index)
         if d == 'l' then
@@ -69,10 +82,18 @@ MV.graph_move = function(layer_to_node_keys, key_to_node, dir, index_start, inde
                 -- We assume its expanded
                 if #focused_node.children > 0 then
                     local first_child_key = focused_node.children[1].key
-                    local child_layer = layer_to_node_keys[i_start[1]+1]
+                    local first_child_node = key_to_node[first_child_key]
+                    local layers_stepped = 1
+                    while first_child_node.type == g.NodeType.Connection do
+                        -- We assume a Connection node always has exactly one child
+                        first_child_node = first_child_node.children[1]
+                        first_child_key = first_child_node.key
+                        layers_stepped = layers_stepped + 1
+                    end
+                    local child_layer = layer_to_node_keys[i_start[1]+layers_stepped]
                     local child_index = u.get_value_index(child_layer, first_child_key)
                     if child_index ~= -1 then
-                        return {i_start, {i_start[1]+1, child_index}}
+                        return {i_start, {i_start[1]+layers_stepped, child_index}}
                     else
                         error("Child not found in next layer, INVALID GRAPH")
                     end
@@ -83,17 +104,17 @@ MV.graph_move = function(layer_to_node_keys, key_to_node, dir, index_start, inde
             if dir == 'h' then
                 if i_start[1] - 1 > 0 then
                     local child_key = layer_to_node_keys[i_start[1]][i_start[2]]
-                    local parent_layer = layer_to_node_keys[i_start[1]-1]
-                    for parent_i, parent_key in ipairs(parent_layer) do
-                        local parent = key_to_node[parent_key]
-                        for _, ch in ipairs(parent.children) do
-                            if ch.key == child_key then
-                                return {{i_start[1]-1, parent_i}, index_end}
-                            end
-                        end
-                    end
-                    error("Parent not found in previous layer, INVALID GRAPH")
+                    local layers_stepped_back = 1
+                    local parent_layer = layer_to_node_keys[i_start[1]-layers_stepped_back]
+                    local parent, parent_i = get_parent_with_index_from_list(key_to_node, parent_layer, child_key)
 
+                    while parent.type == g.NodeType.Connection do
+                        layers_stepped_back = layers_stepped_back + 1
+                        parent_layer = layer_to_node_keys[i_start[1]-layers_stepped_back]
+                        parent, parent_i = get_parent_with_index_from_list(key_to_node, parent_layer, parent.key)
+                    end
+
+                    return {{i_start[1]-layers_stepped_back, parent_i}, index_end}
                 else
                     return {index_start, index_end}
                 end
@@ -126,7 +147,19 @@ MV.graph_move = function(layer_to_node_keys, key_to_node, dir, index_start, inde
                 candidate_end_key = layer_to_node_keys[i_end[1]][i_end[2]]
             end
 
-            return {index_start, i_end}
+            local end_node = key_to_node[candidate_end_key]
+
+            local layers_stepped = 0
+            while end_node.type == g.NodeType.Connection do
+                -- We assume a Connection node always has exactly one child
+                end_node = end_node.children[1]
+                layers_stepped = layers_stepped + 1
+            end
+
+            local end_layer = layer_to_node_keys[i_end[1]+layers_stepped]
+            local end_index = u.get_value_index(end_layer, end_node.key)
+
+            return {index_start, {i_end[1] + layers_stepped, end_index}}
 
 
         end

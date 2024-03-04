@@ -75,6 +75,48 @@ describe("graph_move", function()
         assert.are.same({{1,1}, {2,2}}, mv.graph_move(layer_to_node_keys, key_to_node, 'j', {1,1}, {2,2}))
     end)
 
-    it("automatically moves along connections edges", function()
+    it("automatically moves along connections edges when selected from node", function()
+        local nodea1 = { name = "nodea1", key = "nodea1key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea2 = { name = "nodea2", key = "nodea2key", children = {}, expanded = true, type = g.NodeType.Connection}
+        local nodea3 = { name = "nodea3", key = "nodea3key", children = {}, expanded = true, type = g.NodeType.Regular}
+        nodea1.children = { nodea2 }
+        nodea2.children = { nodea3 }
+
+        local key_to_node = {}
+        key_to_node[nodea1.key] = nodea1
+        key_to_node[nodea2.key] = nodea2
+        key_to_node[nodea3.key] = nodea3
+
+        local layer_to_node_keys = {}
+        layer_to_node_keys[1] = {nodea1.key}
+        layer_to_node_keys[2] = {nodea2.key}
+        layer_to_node_keys[3] = {nodea3.key}
+
+        assert.are.same({{1,1}, {3,1}}, mv.graph_move(layer_to_node_keys, key_to_node, 'l', {1,1}, {1,1}))
+        assert.are.same({{3,1}, {3,1}}, mv.graph_move(layer_to_node_keys, key_to_node, 'l', {3,1}, {3,1}))
+        assert.are.same({{1,1}, {3,1}}, mv.graph_move(layer_to_node_keys, key_to_node, 'h', {3,1}, {3,1}))
+        assert.are.same({{1,1}, {1,1}}, mv.graph_move(layer_to_node_keys, key_to_node, 'h', {1,1}, {1,1}))
+    end)
+
+    it("automatically moves along connections edges when selected from below/above edge", function()
+        local nodea1 = { name = "nodea1", key = "nodea1key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea2 = { name = "nodea2", key = "nodea2key", children = {}, expanded = true, type = g.NodeType.Connection}
+        local nodea3 = { name = "nodea3", key = "nodea3key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea4 = { name = "nodea4", key = "nodea4key", children = {}, expanded = true, type = g.NodeType.Regular}
+        nodea1.children = { nodea2, nodea4 }
+        nodea2.children = { nodea3 }
+
+        local key_to_node = {}
+        key_to_node[nodea1.key] = nodea1
+        key_to_node[nodea2.key] = nodea2
+        key_to_node[nodea3.key] = nodea3
+        key_to_node[nodea4.key] = nodea4
+
+        local layer_to_node_keys = {}
+        layer_to_node_keys[1] = {nodea1.key}
+        layer_to_node_keys[2] = {nodea2.key, nodea4.key}
+        layer_to_node_keys[3] = {nodea3.key}
+
+        assert.are.same({{1,1}, {3,1}}, mv.graph_move(layer_to_node_keys, key_to_node, 'k', {1,1}, {2,2}))
     end)
 end)
