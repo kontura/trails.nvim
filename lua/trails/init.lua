@@ -34,7 +34,7 @@ end
 function M.move_focus(dir)
     local focused_node_key_start = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
     local focused_node = M.key_to_node[focused_node_key_start]
-    if dir == 'l' and not focused_node.expanded then
+    if dir == 'l' and focused_node and not focused_node.expanded then
         M.expand_node(focused_node)
     else
         local moved = mv.graph_move(M.layer_to_node_keys,
