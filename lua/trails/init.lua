@@ -131,7 +131,7 @@ M.print_tree = function()
     g.print_tree(M.key_to_node_with_fake[M.layer_to_node_keys[1][1]])
 end
 
-M.print_lines_to_buffer = function(buf, lines, active_positions)
+M.print_lines_to_buffer = function(buf, lines, highlight_positions)
     vim.api.nvim_buf_set_option(buf, 'modifiable', true)
     vim.api.nvim_buf_set_lines(buf, 0, -1, true, {})
 
@@ -142,7 +142,7 @@ M.print_lines_to_buffer = function(buf, lines, active_positions)
     --end
     vim.api.nvim_buf_set_lines(buf, 0, #lines, false, lines)
     vim.api.nvim_buf_set_option(buf, 'modifiable', false)
-    for _, active_pos in ipairs(active_positions) do
+    for _, active_pos in ipairs(highlight_positions) do
         local byte_start = vim.str_byteindex(lines[active_pos.line], active_pos.start)
         vim.api.nvim_buf_set_extmark(M.buf,
                                      M.namespace_id,

@@ -69,48 +69,48 @@ end
 
 -- start is a char cound from the begining of the line (not byte count)
 -- len is byte len (not char len)
-local function add_active_segment(active_positions, line, start, len)
+local function add_active_segment(highlight_positions, line, start, len)
     local active_segment = {}
     active_segment.line = line
     active_segment.start = start
     active_segment.len = len
-    if active_positions ~= nil then
-        table.insert(active_positions, active_segment)
+    if highlight_positions ~= nil then
+        table.insert(highlight_positions, active_segment)
     end
 end
 
 -- By default all edges go just straight we have to figure out what to do here
-local function add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, active_positions)
+local function add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, highlight_positions)
     local walked = 0
     if source_i == child_i then
         lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
         walked = walked + 1
         lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
         walked = walked + 1
-        add_active_segment(active_positions, source_i, starting_index + walked - 2, #'─'*2)
+        add_active_segment(highlight_positions, source_i, starting_index + walked - 2, #'─'*2)
     elseif source_i < child_i then
         while source_i < child_i do
             lines[source_i] = add_edge(starting_index + walked, lines[source_i], '┐')
-            add_active_segment(active_positions, source_i, starting_index + walked, #'┐')
+            add_active_segment(highlight_positions, source_i, starting_index + walked, #'┐')
             source_i = source_i + 1
             lines[source_i] = add_edge(starting_index + walked, lines[source_i], '└')
-            add_active_segment(active_positions, source_i, starting_index + walked, #'└')
+            add_active_segment(highlight_positions, source_i, starting_index + walked, #'└')
             walked = walked + 1
         end
         lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
-        add_active_segment(active_positions, source_i, starting_index + walked, #'─')
+        add_active_segment(highlight_positions, source_i, starting_index + walked, #'─')
         walked = walked + 1
     elseif source_i > child_i then
         while source_i > child_i do
             lines[source_i] = add_edge(starting_index + walked, lines[source_i], '┘')
-            add_active_segment(active_positions, source_i, starting_index + walked, #'┘')
+            add_active_segment(highlight_positions, source_i, starting_index + walked, #'┘')
             source_i = source_i - 1
             lines[source_i] = add_edge(starting_index + walked, lines[source_i], '┌')
-            add_active_segment(active_positions, source_i, starting_index + walked, #'┌')
+            add_active_segment(highlight_positions, source_i, starting_index + walked, #'┌')
             walked = walked + 1
         end
         lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
-        add_active_segment(active_positions, source_i, starting_index + walked, #'─')
+        add_active_segment(highlight_positions, source_i, starting_index + walked, #'─')
         walked = walked + 1
     end
 
@@ -120,7 +120,7 @@ local function add_connection(lines, starting_index, source_i, child_i, connecti
         lines[source_i] = add_edge(starting_index + walked, lines[source_i], '─')
         walked = walked + 1
     end
-    add_active_segment(active_positions, source_i, hi_start, #'─'*(starting_index + walked - hi_start))
+    add_active_segment(highlight_positions, source_i, hi_start, #'─'*(starting_index + walked - hi_start))
     return walked
 end
 
@@ -157,7 +157,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
         table.insert(lines, "")
     end
 
-    local active_positions = {}
+    local highlight_positions = {}
 
     for layer_index = 1, layer_count do
         local layer_nodes = padded_layer_to_node_keys[layer_index]
@@ -191,7 +191,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
                     if child_i ~= -1 then
                         if (vim.endswith(source_key, active_key_start) and child.key == active_key_end) or
                            (vim.endswith(source_key, active_key_start) and child.connecting_to == active_key_end) then
-                            add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, active_positions)
+                            add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, highlight_positions)
                         else
                             add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, nil)
                         end
@@ -222,7 +222,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
 
             -- Highligh name
             if mynode.key == active_key_start and mynode.key == active_key_end then
-                add_active_segment(active_positions, current_line, vim.fn.strcharlen(lines[current_line]), #mynode.name + 2 + 1) -- +2 for brackets + 1 for EXPANDED
+                add_active_segment(highlight_positions, current_line, vim.fn.strcharlen(lines[current_line]), #mynode.name + 2 + 1) -- +2 for brackets + 1 for EXPANDED
             end
 
 
@@ -238,7 +238,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
                 local before_name_start = vim.fn.strcharlen(lines[current_line])
                 lines[current_line] = lines[current_line] .. "─" ..  mynode.name .. "─" .. "─"
                 if (vim.endswith(mynode.key, active_key_start) and mynode.connecting_to == active_key_end) then
-                    add_active_segment(active_positions, current_line, before_name_start, 3*#"─" + #mynode.name)
+                    add_active_segment(highlight_positions, current_line, before_name_start, 3*#"─" + #mynode.name)
                 end
             else
                 error("Invalid NodeType for node: " .. vim.inspect(mynode))
@@ -270,7 +270,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
 
             if (mynode.key == active_key_start and mynode.key ~= active_key_end) or
                (vim.endswith(mynode.key, active_key_start) and mynode.connecting_to == active_key_end) then
-                add_active_segment(active_positions, current_line, after_name_start, #lines[current_line] - after_name_start_byte)
+                add_active_segment(highlight_positions, current_line, after_name_start, #lines[current_line] - after_name_start_byte)
             end
 
             current_line = current_line + 1
@@ -281,7 +281,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
         lines[i] = rtrim(lines[i])
     end
 
-    return lines, active_positions
+    return lines, highlight_positions
 end
 
 return A
