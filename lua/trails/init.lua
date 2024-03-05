@@ -131,7 +131,7 @@ M.print_tree = function()
     g.print_tree(M.key_to_node_with_fake[M.layer_to_node_keys[1][1]])
 end
 
-M.print_lines_to_buffer = function(buf, lines, highlight_positions)
+M.print_lines_to_buffer = function(buf, lines, highlight_positions, active_node_pos)
     vim.api.nvim_buf_set_option(buf, 'modifiable', true)
     vim.api.nvim_buf_set_lines(buf, 0, -1, true, {})
 
@@ -152,6 +152,7 @@ M.print_lines_to_buffer = function(buf, lines, highlight_positions)
                                       end_col = byte_start + active_pos.len,
                                       hl_group='StatusLine'})
     end
+    vim.api.nvim_win_set_cursor(M.win, active_node_pos)
 end
 
 

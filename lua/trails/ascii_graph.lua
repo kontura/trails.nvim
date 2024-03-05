@@ -158,6 +158,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
     end
 
     local highlight_positions = {}
+    local active_node_pos = {1, 1}
 
     for layer_index = 1, layer_count do
         local layer_nodes = padded_layer_to_node_keys[layer_index]
@@ -225,7 +226,6 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
                 add_active_segment(highlight_positions, current_line, vim.fn.strcharlen(lines[current_line]), #mynode.name + 2 + 1) -- +2 for brackets + 1 for EXPANDED
             end
 
-
             if (mynode.type == g.NodeType.Empty) then
                 lines[current_line] = lines[current_line] .. " " ..  mynode.name .. " " .. " "
             elseif (mynode.type == g.NodeType.Regular) then
@@ -242,6 +242,11 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
                 end
             else
                 error("Invalid NodeType for node: " .. vim.inspect(mynode))
+            end
+
+            if mynode.key == active_key_end then
+                active_node_pos[1] = current_line
+                active_node_pos[2] = #lines[current_line] - 1
             end
 
 
@@ -281,7 +286,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
         lines[i] = rtrim(lines[i])
     end
 
-    return lines, highlight_positions
+    return lines, highlight_positions, active_node_pos
 end
 
 return A
