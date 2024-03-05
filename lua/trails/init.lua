@@ -143,12 +143,13 @@ M.print_lines_to_buffer = function(buf, lines, active_positions)
     vim.api.nvim_buf_set_lines(buf, 0, #lines, false, lines)
     vim.api.nvim_buf_set_option(buf, 'modifiable', false)
     for _, active_pos in ipairs(active_positions) do
+        local byte_start = vim.str_byteindex(lines[active_pos.line], active_pos.start)
         vim.api.nvim_buf_set_extmark(M.buf,
                                      M.namespace_id,
                                      active_pos.line - 1, -- lines index from 0
-                                     active_pos.start,
+                                     byte_start,
                                      {end_row = active_pos.line - 1, -- lines index from 0
-                                      end_col = active_pos.start + active_pos.len,
+                                      end_col = byte_start + active_pos.len,
                                       hl_group='StatusLine'})
     end
 end
