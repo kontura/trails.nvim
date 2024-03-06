@@ -158,6 +158,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
     end
 
     local highlight_positions = {}
+    local expanded_positions = {}
     local active_node_pos = {1, 1}
 
     for layer_index = 1, layer_count do
@@ -223,22 +224,21 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
 
             -- Highligh name
             if mynode.key == active_key_start and mynode.key == active_key_end then
-                add_active_segment(highlight_positions, current_line, vim.fn.strcharlen(lines[current_line]), #mynode.name + 2 + 1) -- +2 for brackets + 1 for EXPANDED
+                add_active_segment(highlight_positions, current_line, vim.fn.strcharlen(lines[current_line]), #mynode.name + 2) -- +2 for brackets
             end
 
             if (mynode.type == g.NodeType.Empty) then
-                lines[current_line] = lines[current_line] .. " " ..  mynode.name .. " " .. " "
+                lines[current_line] = lines[current_line] .. " " ..  mynode.name .. " "
             elseif (mynode.type == g.NodeType.Regular) then
-                local expanded = 'C'
                 if mynode.expanded then
-                    expanded = 'E'
+                    add_active_segment(expanded_positions, current_line, vim.fn.strcharlen(lines[current_line]), #mynode.name + 2) -- +2 for brackets
                 end
-                lines[current_line] = lines[current_line] .. "[" ..  mynode.name .. expanded .. "]"
+                lines[current_line] = lines[current_line] .. "[" ..  mynode.name .. "]"
             elseif (mynode.type == g.NodeType.Connection) then
                 local before_name_start = vim.fn.strcharlen(lines[current_line])
-                lines[current_line] = lines[current_line] .. "─" ..  mynode.name .. "─" .. "─"
+                lines[current_line] = lines[current_line] .. "─" ..  mynode.name .. "─"
                 if (vim.endswith(mynode.key, active_key_start) and mynode.connecting_to == active_key_end) then
-                    add_active_segment(highlight_positions, current_line, before_name_start, 3*#"─" + #mynode.name)
+                    add_active_segment(highlight_positions, current_line, before_name_start, 2*#"─" + #mynode.name)
                 end
             else
                 error("Invalid NodeType for node: " .. vim.inspect(mynode))
@@ -286,7 +286,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
         lines[i] = rtrim(lines[i])
     end
 
-    return lines, highlight_positions, active_node_pos
+    return lines, highlight_positions, active_node_pos, expanded_positions
 end
 
 return A
