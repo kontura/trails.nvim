@@ -20,9 +20,9 @@ describe("ascii_graph", function()
         layer_to_node_keys[2] = {nodea3.key, nodea2.key}
 
         local lines = {}
-        lines[1] = '[nodea1E]◄┬──[nodea3E]'
-        lines[2] = '          └┐'
-        lines[3] = '           └─[nodea2E]'
+        lines[1] = '[nodea1]◄┬──[nodea3]'
+        lines[2] = '         └┐'
+        lines[3] = '          └─[nodea2]'
 
         assert.are.same(lines, ag.draw_graph(key_to_node, "none", "none", layer_to_node_keys))
 
@@ -31,15 +31,15 @@ describe("ascii_graph", function()
         layer_to_node_keys[2] = {nodeE.key, nodea3.key, nodeE.key, nodeE.key, nodea2.key}
 
         lines = {}
-        lines[1] = '[nodea1E]◄┐'
-        lines[2] = '          └┐'
-        lines[3] = '           └┬──────[nodea3E]'
-        lines[4] = '            └┐'
-        lines[5] = '             └┐'
-        lines[6] = '              └┐'
-        lines[7] = '               └┐'
-        lines[8] = '                └┐'
-        lines[9] = '                 └─[nodea2E]'
+        lines[1] = '[nodea1]◄┐'
+        lines[2] = '         └┐'
+        lines[3] = '          └┬──────[nodea3]'
+        lines[4] = '           └┐'
+        lines[5] = '            └┐'
+        lines[6] = '             └┐'
+        lines[7] = '              └┐'
+        lines[8] = '               └┐'
+        lines[9] = '                └─[nodea2]'
 
         assert.are.same(lines, ag.draw_graph(key_to_node, "none", "none", layer_to_node_keys))
     end)
@@ -71,9 +71,9 @@ describe("ascii_graph", function()
         layer_to_node_keys[3] = {nodea3.key, nodeb2.key}
 
         local lines = {}
-        lines[1] = '[nodea1E]◄┬──[nodeb1E]◄┐┌─[nodea3E]'
-        lines[2] = '          └┐           ├┤'
-        lines[3] = '           └─[nodea2E]◄┘└─[nodeb2E]'
+        lines[1] = '[nodea1]◄┬──[nodeb1]◄┐┌─[nodea3]'
+        lines[2] = '         └┐          ├┤'
+        lines[3] = '          └─[nodea2]◄┘└─[nodeb2]'
 
         assert.are.same(lines, ag.draw_graph(key_to_node, "none", "none", layer_to_node_keys))
     end)
@@ -105,11 +105,11 @@ describe("ascii_graph", function()
         layer_to_node_keys[3] = {nodea3.key, nodea4.key, nodea5.key}
 
         local lines = {}
-        lines[1] = '[nodea1E]◄┐             ┌─[nodea3E]'
-        lines[2] = '          └┐           ┌┘'
-        lines[3] = '           └─[nodea2E]◄┼──[nodea4E]'
-        lines[4] = '                       └┐'
-        lines[5] = '                        └─[nodea5E]'
+        lines[1] = '[nodea1]◄┐            ┌─[nodea3]'
+        lines[2] = '         └┐          ┌┘'
+        lines[3] = '          └─[nodea2]◄┼──[nodea4]'
+        lines[4] = '                     └┐'
+        lines[5] = '                      └─[nodea5]'
 
         assert.are.same(lines, ag.draw_graph(key_to_node, "none", "none", layer_to_node_keys))
     end)
@@ -140,15 +140,15 @@ describe("ascii_graph", function()
         layer_to_node_keys[3] = {nodea3.key}
 
         local lines = {}
-        lines[1] = '[nodea1E]◄┐                     ┌───┬─[nodea3E]'
-        lines[2] = '          └┐                   ┌┘  ┌┘'
-        lines[3] = '           └┐                 ┌┘  ┌┘'
-        lines[4] = '            └┐               ┌┘  ┌┘'
-        lines[5] = '             └┬────[nodea2E]◄┘  ┌┘'
-        lines[6] = '              └┐               ┌┘'
-        lines[7] = '               └┐             ┌┘'
-        lines[8] = '                └┐           ┌┘'
-        lines[9] = '                 └─[nodeb1E]◄┘'
+        lines[1] = '[nodea1]◄┐                    ┌───┬─[nodea3]'
+        lines[2] = '         └┐                  ┌┘  ┌┘'
+        lines[3] = '          └┐                ┌┘  ┌┘'
+        lines[4] = '           └┐              ┌┘  ┌┘'
+        lines[5] = '            └┬────[nodea2]◄┘  ┌┘'
+        lines[6] = '             └┐              ┌┘'
+        lines[7] = '              └┐            ┌┘'
+        lines[8] = '               └┐          ┌┘'
+        lines[9] = '                └─[nodeb1]◄┘'
 
         assert.are.same(lines, ag.draw_graph(key_to_node, "none", "none", layer_to_node_keys))
     end)
