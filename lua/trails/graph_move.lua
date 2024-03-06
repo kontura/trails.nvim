@@ -16,6 +16,23 @@ local get_parent_with_index_from_list = function(key_to_node, list, child_key)
 
 end
 
+local get_item_index_ends_with = function(key_to_node, list, key)
+    for item_i, item in ipairs(list) do
+        local node = key_to_node[item]
+        if node.type == g.NodeType.Connection then
+            if node.connecting_to == key then
+                return item_i
+            end
+        else
+            if node.key == key then
+                return item_i
+            end
+        end
+    end
+
+    return -1
+end
+
 MV.graph_move = function(layer_to_node_keys, key_to_node, dir, index_start, index_end)
     local get_next = function(d, index)
         if d == 'l' then
@@ -132,6 +149,10 @@ MV.graph_move = function(layer_to_node_keys, key_to_node, dir, index_start, inde
         end
         if dir == 'j' or dir == 'k' then
             local parent = key_to_node[layer_to_node_keys[index_start[1]][index_start[2]]]
+
+            i_end[2] = get_item_index_ends_with(key_to_node, layer_to_node_keys[index_start[1]+1], layer_to_node_keys[index_end[1]][index_end[2]])
+            i_end[1] = index_start[1]+1
+
             get_next(dir, i_end)
 
             if is_out_of_bounds(i_end) then

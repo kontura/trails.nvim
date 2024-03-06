@@ -105,6 +105,7 @@ describe("graph_move", function()
         local nodea4 = { name = "nodea4", key = "nodea4key", children = {}, expanded = true, type = g.NodeType.Regular}
         nodea1.children = { nodea2, nodea4 }
         nodea2.children = { nodea3 }
+        nodea2.connecting_to = nodea3.key
 
         local key_to_node = {}
         key_to_node[nodea1.key] = nodea1
@@ -118,5 +119,6 @@ describe("graph_move", function()
         layer_to_node_keys[3] = {nodea3.key}
 
         assert.are.same({{1,1}, {3,1}}, mv.graph_move(layer_to_node_keys, key_to_node, 'k', {1,1}, {2,2}))
+        assert.are.same({{1,1}, {2,2}}, mv.graph_move(layer_to_node_keys, key_to_node, 'j', {1,1}, {3,1}))
     end)
 end)
