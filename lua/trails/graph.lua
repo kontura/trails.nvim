@@ -1,6 +1,16 @@
 local G = {}
 local u = require("trails.utils")
 
+G.get_key_index = function(layer_to_node_keys, key)
+    for layer_i, layer in ipairs(layer_to_node_keys) do
+        for node_key_i, node_key in ipairs(layer) do
+            if node_key == key then
+                return {layer_i, node_key_i}
+            end
+        end
+    end
+end
+
 function G.make_key(name, uri)
     return name.."-"..uri
 end
