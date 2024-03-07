@@ -42,11 +42,11 @@ function M.move_focus(dir)
                                     M.focused_node_key_index_end)
         M.focused_node_key_index_start = moved[1]
         M.focused_node_key_index_end = moved[2]
-    end
 
-    local new_focused_node_key_start = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
-    local new_focused_node_key_end = M.layer_to_node_keys[M.focused_node_key_index_end[1]][M.focused_node_key_index_end[2]]
-    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, new_focused_node_key_start, new_focused_node_key_end, M.layer_to_node_keys))
+        local new_focused_node_key_start = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
+        local new_focused_node_key_end = M.layer_to_node_keys[M.focused_node_key_index_end[1]][M.focused_node_key_index_end[2]]
+        M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, new_focused_node_key_start, new_focused_node_key_end, M.layer_to_node_keys))
+    end
 end
 
 -- Called just once when the graph is first created.
