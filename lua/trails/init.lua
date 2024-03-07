@@ -103,10 +103,11 @@ local handler = function(err, result, ctx, config)
         table.insert(parent.children, node)
     end
     parent.expanded = true
-    M.layer_to_node_keys, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
     local focused_node_key_start = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
-    local focused_node_key_end = M.layer_to_node_keys[M.focused_node_key_index_end[1]][M.focused_node_key_index_end[2]]
-    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key_start, focused_node_key_end, M.layer_to_node_keys))
+    M.layer_to_node_keys, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
+    M.focused_node_key_index_start = g.get_key_index(M.layer_to_node_keys, focused_node_key_start)
+    M.focused_node_key_index_end = M.focused_node_key_index_start
+    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key_start, focused_node_key_start, M.layer_to_node_keys))
 end
 
 M.setup = function(opts)
