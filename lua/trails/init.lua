@@ -46,6 +46,12 @@ function M.move_focus(dir)
         local new_focused_node_key_start = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
         local new_focused_node_key_end = M.layer_to_node_keys[M.focused_node_key_index_end[1]][M.focused_node_key_index_end[2]]
         M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, new_focused_node_key_start, new_focused_node_key_end, M.layer_to_node_keys))
+        if vim.deep_equal(new_focused_node_key_start, new_focused_node_key_end) then
+            local new_focused_node = M.key_to_node[new_focused_node_key_end]
+            vim.cmd('setlocal statusline=' .. new_focused_node.uri)
+        else
+            vim.cmd('setlocal statusline=')
+        end
     end
 end
 
