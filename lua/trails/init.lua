@@ -12,7 +12,7 @@ local g = require("trails.graph")
 local a = require("trails.ascii_graph")
 local mv = require("trails.graph_move")
 
-function M.open_split()
+function M.setup_buffer()
     M.win = vim.api.nvim_get_current_win()
     M.buf = vim.api.nvim_create_buf(true, true)
     vim.api.nvim_win_set_buf(M.win, M.buf)
@@ -80,7 +80,7 @@ local incomingCallsRoothandler = function(err, result, ctx, config)
         root.expanded = true
         M.root = root
     end
-    M.open_split()
+    M.setup_buffer()
     M.layer_to_node_keys, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
 
     local first_non_empty_node_index = 1
