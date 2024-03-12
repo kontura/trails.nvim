@@ -314,15 +314,17 @@ G.layout_graph = function(root, key_to_node)
             local targets = layer_to_node_keys[layer_index]
             for _, source_key in pairs(sources) do
                 local source = key_to_node_with_fake[source_key]
-                for _, child in pairs(source.children) do
-                    if not vim.tbl_contains(targets, child.key) then
-                        local fake_node_key = "connection-" .. source.key
-                        if not key_to_node_with_fake[fake_node_key] then
-                            local connection_node = G.create_connection_node(fake_node_key, child)
-                            key_to_node_with_fake[fake_node_key] = connection_node
-                            table.insert(source.children, connection_node)
-                            source.children = remove_node_by_key(source.children, child.key)
-                            table.insert(layer_to_node_keys[layer_index], fake_node_key)
+                if source.expanded then
+                    for _, child in pairs(source.children) do
+                        if not vim.tbl_contains(targets, child.key) then
+                            local fake_node_key = "connection-" .. source.key
+                            if not key_to_node_with_fake[fake_node_key] then
+                                local connection_node = G.create_connection_node(fake_node_key, child)
+                                key_to_node_with_fake[fake_node_key] = connection_node
+                                table.insert(source.children, connection_node)
+                                source.children = remove_node_by_key(source.children, child.key)
+                                table.insert(layer_to_node_keys[layer_index], fake_node_key)
+                            end
                         end
                     end
                 end
