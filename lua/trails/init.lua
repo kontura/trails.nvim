@@ -22,6 +22,38 @@ function M.setup_buffer()
     vim.api.nvim_buf_set_keymap(M.buf, "n", "j", ":lua require'trails'.move_focus('j')<cr>", {silent = true})
     vim.api.nvim_buf_set_keymap(M.buf, "n", "k", ":lua require'trails'.move_focus('k')<cr>", {silent = true})
     vim.api.nvim_buf_set_keymap(M.buf, "n", "gd", ":lua require'trails'.jump_to_focused()<cr>", {silent = true})
+    vim.api.nvim_buf_set_keymap(M.buf, "n", "za", ":lua require'trails'.toggle_expanded_focused()<cr>", {silent = true})
+end
+
+local refresh_graph = function()
+    local focused_node_key_start = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
+    local focused_node_key_end = M.layer_to_node_keys[M.focused_node_key_index_end[1]][M.focused_node_key_index_end[2]]
+    M.layer_to_node_keys, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
+    M.focused_node_key_index_start = g.get_key_index(M.layer_to_node_keys, focused_node_key_start)
+    M.focused_node_key_index_end = g.get_key_index(M.layer_to_node_keys, focused_node_key_end)
+    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key_start, focused_node_key_start, M.layer_to_node_keys))
+end
+
+local get_focused_node = function()
+    if vim.deep_equal(M.focused_node_key_index_start, M.focused_node_key_index_end) then
+        local focused_node_key_start = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
+        local focused_node = M.key_to_node[focused_node_key_start]
+        return focused_node
+    else
+        return nil
+    end
+end
+
+function M.toggle_expanded_focused()
+    local focused_node = get_focused_node()
+    if focused_node ~= nil then
+        if focused_node.expanded then
+            focused_node.expanded = false
+        else
+            M.expand_node(focused_node)
+        end
+        refresh_graph()
+    end
 end
 
 function M.jump_to_focused()
@@ -34,6 +66,7 @@ function M.move_focus(dir)
     local focused_node = M.key_to_node[focused_node_key_start]
     if dir == 'l' and focused_node and not focused_node.expanded then
         M.expand_node(focused_node)
+        refresh_graph()
     else
         local moved = mv.graph_move(M.layer_to_node_keys,
                                     M.key_to_node_with_fake,
@@ -109,11 +142,7 @@ local handler = function(err, result, ctx, config)
         table.insert(parent.children, node)
     end
     parent.expanded = true
-    local focused_node_key_start = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
-    M.layer_to_node_keys, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
-    M.focused_node_key_index_start = g.get_key_index(M.layer_to_node_keys, focused_node_key_start)
-    M.focused_node_key_index_end = M.focused_node_key_index_start
-    M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key_start, focused_node_key_start, M.layer_to_node_keys))
+    refresh_graph()
 end
 
 M.setup = function(opts)
@@ -123,6 +152,10 @@ end
 
 M.expand_node = function(node)
     if node.expanded then
+        return
+    end
+    if #node.children > 0 then
+        node.expanded = true
         return
     end
     local clients = vim.lsp.get_active_clients()
