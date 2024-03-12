@@ -188,14 +188,16 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
             for source_i, source_key in pairs(sources) do
                 local source = key_to_node[source_key]
                 --P("source: " .. source.name .. " with " .. #source.children)
-                for _, child in pairs(source.children) do
-                    local child_i = u.get_value_index(targets, child.key)
-                    if child_i ~= -1 then
-                        if (vim.endswith(source_key, active_key_start) and child.key == active_key_end) or
-                           (vim.endswith(source_key, active_key_start) and child.connecting_to == active_key_end) then
-                            add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, highlight_positions)
-                        else
-                            add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, nil)
+                if source.expanded then
+                    for _, child in pairs(source.children) do
+                        local child_i = u.get_value_index(targets, child.key)
+                        if child_i ~= -1 then
+                            if (vim.endswith(source_key, active_key_start) and child.key == active_key_end) or
+                               (vim.endswith(source_key, active_key_start) and child.connecting_to == active_key_end) then
+                                add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, highlight_positions)
+                            else
+                                add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, nil)
+                            end
                         end
                     end
                 end
@@ -253,7 +255,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
             local after_name_start_byte = #lines[current_line]
             local after_name_start = vim.fn.strcharlen(lines[current_line])
 
-            if #mynode.children > 0 then
+            if mynode.expanded and #mynode.children > 0 then
                 if mynode.type == g.NodeType.Regular then
                     lines[current_line] = lines[current_line] .. '◄'
                 elseif mynode.type == g.NodeType.Connection then
