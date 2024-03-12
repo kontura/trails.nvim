@@ -83,12 +83,12 @@ local incomingCallsRoothandler = function(err, result, ctx, config)
     M.setup_buffer()
     M.layer_to_node_keys, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
 
-    local first_non_empty_node_index = 1
-    while (M.key_to_node_with_fake[M.layer_to_node_keys[1][first_non_empty_node_index]].type ~= g.NodeType.Regular) do
-        first_non_empty_node_index = first_non_empty_node_index + 1
+    local first_regular_node_index = 1
+    while (M.key_to_node_with_fake[M.layer_to_node_keys[1][first_regular_node_index]].type ~= g.NodeType.Regular) do
+        first_regular_node_index = first_regular_node_index + 1
     end
-    M.focused_node_key_index_start = {1, first_non_empty_node_index}
-    M.focused_node_key_index_end = {1, first_non_empty_node_index}
+    M.focused_node_key_index_start = {1, first_regular_node_index}
+    M.focused_node_key_index_end = {1, first_regular_node_index}
     local focused_node_key = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
     M.print_lines_to_buffer(M.buf, a.draw_graph(M.key_to_node_with_fake, focused_node_key, focused_node_key, M.layer_to_node_keys))
 end
