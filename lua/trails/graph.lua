@@ -194,6 +194,7 @@ function G.create_node(name, kind, uri, detail, expanded, range, from_ranges, se
     type = type or G.NodeType.Regular
     return {
             name = name,
+            calls = {},
             kind = kind,
             uri = uri,
             key = key,

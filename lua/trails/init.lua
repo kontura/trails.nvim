@@ -57,8 +57,21 @@ function M.toggle_expanded_focused()
 end
 
 function M.jump_to_focused()
-    local focused_node_key = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
-    vim.lsp.util.jump_to_location(M.key_to_node[focused_node_key], "utf-8", true)
+    local focused_node_key_start = M.layer_to_node_keys[M.focused_node_key_index_start[1]][M.focused_node_key_index_start[2]]
+    if vim.deep_equal(M.focused_node_key_index_start, M.focused_node_key_index_end) then
+        vim.lsp.util.jump_to_location(M.key_to_node[focused_node_key_start], "utf-8", true)
+    else
+        local focused_node_key_end = M.layer_to_node_keys[M.focused_node_key_index_end[1]][M.focused_node_key_index_end[2]]
+        local focused_node_end = M.key_to_node[focused_node_key_end]
+        local loca = focused_node_end.calls[focused_node_key_start]
+        local target = {}
+        -- We always take the first location even if there are multiple,
+        -- should we create more edges between the same two nodes if
+        -- there are multiple call sites?
+        target.range = loca[1]
+        target.uri = focused_node_end.uri
+        vim.lsp.util.jump_to_location(target, "utf-8", true)
+    end
 end
 
 function M.move_focus(dir)
@@ -109,6 +122,7 @@ local incomingCallsRoothandler = function(err, result, ctx, config)
             node.data = c.data
             M.key_to_node[node.key] = node
             table.insert(root.children, node)
+            node.calls[root.key] = c_full["fromRanges"]
         end
         root.expanded = true
         M.root = root
@@ -140,6 +154,7 @@ local handler = function(err, result, ctx, config)
             M.key_to_node[node_key] = node
         end
         table.insert(parent.children, node)
+        node.calls[parent.key] = c_full["fromRanges"]
     end
     parent.expanded = true
     refresh_graph()
