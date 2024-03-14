@@ -126,6 +126,9 @@ local incomingCallsRoothandler = function(err, result, ctx, config)
         end
         root.expanded = true
         M.root = root
+    else
+        print("Failed to get incoming calls for root. Try again.")
+        return
     end
     M.setup_buffer()
     M.layer_to_node_keys, M.key_to_node_with_fake = g.layout_graph(M.root, M.key_to_node)
