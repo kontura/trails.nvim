@@ -113,7 +113,7 @@ local function mate(layer_to_node_keys1, layer_to_node_keys2)
 end
 
 function G.minimize_crossings_genetic(key_to_node, layer_to_node_keys)
-    local POPULATION_SIZE = 10
+    local POPULATION_SIZE = 30
     local population = {{gene = vim.deepcopy(layer_to_node_keys), fitness = 0}}
     for _ = 1, POPULATION_SIZE do
         local individual = {gene = vim.deepcopy(layer_to_node_keys), fitness = 0}
@@ -135,7 +135,7 @@ function G.minimize_crossings_genetic(key_to_node, layer_to_node_keys)
     end
 
     -- EXAMPLE 40 iterations loop
-    for _ = 1, 40 do
+    for _ = 1, 140 do
         table.sort(population, function(left, right)
             return left.fitness < right.fitness
         end)
