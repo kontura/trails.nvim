@@ -121,4 +121,24 @@ describe("graph_move", function()
         assert.are.same({{1,1}, {3,1}}, mv.graph_move(layer_to_node_keys, key_to_node, 'k', {1,1}, {2,2}))
         assert.are.same({{1,1}, {2,2}}, mv.graph_move(layer_to_node_keys, key_to_node, 'j', {1,1}, {3,1}))
     end)
+
+    it("moving to connected edges - while having a non-expanded node", function()
+        local nodea1 = { name = "nodea1", key = "nodea1key", children = {}, expanded = false, type = g.NodeType.Regular}
+        local nodea2 = { name = "nodea2", key = "nodea2key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea3 = { name = "nodea3", key = "nodea3key", children = {}, expanded = true, type = g.NodeType.Regular}
+        nodea1.children = { nodea3 }
+        nodea2.children = { nodea3 }
+
+        local key_to_node = {}
+        key_to_node[nodea1.key] = nodea1
+        key_to_node[nodea2.key] = nodea2
+        key_to_node[nodea3.key] = nodea3
+
+        local layer_to_node_keys = {}
+        layer_to_node_keys[1] = {nodea1.key, nodea2.key}
+        layer_to_node_keys[2] = {nodea3.key}
+
+        assert.are.same({{1,1}, {1,1}}, mv.graph_move(layer_to_node_keys, key_to_node, 'l', {1,1}, {1,1}))
+        assert.are.same({{1,2}, {2,1}}, mv.graph_move(layer_to_node_keys, key_to_node, 'h', {2,1}, {2,1}))
+    end)
 end)

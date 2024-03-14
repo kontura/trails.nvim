@@ -6,9 +6,11 @@ local u = require("trails.utils")
 local get_parent_with_index_from_list = function(key_to_node, list, child_key)
     for parent_i, parent_key in ipairs(list) do
         local parent = key_to_node[parent_key]
-        for _, ch in ipairs(parent.children) do
-            if ch.key == child_key then
-                return parent, parent_i
+        if parent.expanded then
+            for _, ch in ipairs(parent.children) do
+                if ch.key == child_key then
+                    return parent, parent_i
+                end
             end
         end
     end
@@ -96,8 +98,7 @@ MV.graph_move = function(layer_to_node_keys, key_to_node, dir, index_start, inde
             if dir == 'l' then
                 local focused_node_key = layer_to_node_keys[i_start[1]][i_start[2]]
                 local focused_node = key_to_node[focused_node_key]
-                -- We assume its expanded
-                if #focused_node.children > 0 then
+                if focused_node.expanded and #focused_node.children > 0 then
                     local first_child_key = focused_node.children[1].key
                     local first_child_node = key_to_node[first_child_key]
                     local layers_stepped = 1
