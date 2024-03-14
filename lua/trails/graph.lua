@@ -160,7 +160,7 @@ function G.minimize_crossings_genetic(key_to_node, layer_to_node_keys)
         population = new_generation
 
         for i = 1, #population do
-            population[i].fitness = 5*G.count_crossings(key_to_node, population[i].gene) + G.count_len(key_to_node, population[i].gene)
+            population[i].fitness = 10*G.count_crossings(key_to_node, population[i].gene) + G.count_len(key_to_node, population[i].gene)
             --P("Set fitness: " .. population[i].fitness)
             if population[i].fitness == 0 then
                 return population[i].gene
