@@ -248,7 +248,11 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
 
             if mynode.key == active_key_end then
                 active_node_pos[1] = current_line
-                active_node_pos[2] = #lines[current_line] - 1
+                if active_key_end == active_key_start then
+                    active_node_pos[2] = #lines[current_line] - 1
+                else
+                    active_node_pos[2] = #lines[current_line] - 2 - #mynode.name -- -2 for brackets
+                end
             end
 
 
