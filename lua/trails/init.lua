@@ -23,6 +23,25 @@ function M.setup_buffer()
     vim.api.nvim_buf_set_keymap(M.buf, "n", "k", ":lua require'trails'.move_focus('k')<cr>", {silent = true})
     vim.api.nvim_buf_set_keymap(M.buf, "n", "gd", ":lua require'trails'.jump_to_focused()<cr>", {silent = true})
     vim.api.nvim_buf_set_keymap(M.buf, "n", "za", ":lua require'trails'.toggle_expanded_focused()<cr>", {silent = true})
+    M.match_paren = vim.g.loaded_matchparen
+    vim.cmd('NoMatchParen')
+    vim.api.nvim_create_autocmd('BufEnter', {
+        buffer = M.buf,
+        desc = 'NoMatchParen',
+        callback = function()
+            vim.cmd('NoMatchParen')
+        end,
+    })
+    vim.api.nvim_create_autocmd('BufLeave', {
+        buffer = M.buf,
+        desc = 'Restore MatchParen',
+        callback = function()
+            if M.match_paren then
+                vim.cmd('DoMatchParen')
+            end
+        end,
+    })
+
 end
 
 local refresh_graph = function()
