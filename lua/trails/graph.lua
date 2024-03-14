@@ -98,10 +98,10 @@ local function mate(layer_to_node_keys1, layer_to_node_keys2)
     local child = {}
     for layer_index = 1, #layer_to_node_keys1 do
         local p = math.random(100)
-        if (p < 45) then
+        if (p < 30) then
             child[layer_index] = vim.deepcopy(layer_to_node_keys1[layer_index])
         end
-        if (p < 90) then
+        if (p < 60) then
             child[layer_index] = vim.deepcopy(layer_to_node_keys2[layer_index])
         end
         if (p <= 100) then
