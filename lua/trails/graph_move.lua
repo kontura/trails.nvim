@@ -14,7 +14,7 @@ local get_parent_with_index_from_list = function(key_to_node, list, child_key)
             end
         end
     end
-    error("Child not found in previous layer, INVALID GRAPH")
+    error("Child " .. child_key .. " not found in previous layer, INVALID GRAPH")
 
 end
 
@@ -113,7 +113,7 @@ MV.graph_move = function(layer_to_node_keys, key_to_node, dir, index_start, inde
                     if child_index ~= -1 then
                         return {i_start, {i_start[1]+layers_stepped, child_index}}
                     else
-                        error("Child not found in next layer, INVALID GRAPH")
+                        error("Child " .. first_child_key .." not found in " .. i_start[1]+layers_stepped .. " layer, INVALID GRAPH")
                     end
                 else
                     return {index_start, index_end}
