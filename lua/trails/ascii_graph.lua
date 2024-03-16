@@ -192,8 +192,8 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
                     for _, child in pairs(source.children) do
                         local child_i = u.get_value_index(targets, child.key)
                         if child_i ~= -1 then
-                            if (vim.endswith(source_key, active_key_start) and child.key == active_key_end) or
-                               (vim.endswith(source_key, active_key_start) and child.connecting_to == active_key_end) then
+                            if ((source.connecting_from == active_key_start or source.key == active_key_start) and child.key == active_key_end) or
+                               ((source.connecting_from == active_key_start or source.key == active_key_start) and child.connecting_to == active_key_end) then
                                 add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, highlight_positions)
                             else
                                 add_connection(lines, starting_index, source_i, child_i, connection_layer_widht, nil)
@@ -239,7 +239,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
             elseif (mynode.type == g.NodeType.Connection) then
                 local before_name_start = vim.fn.strcharlen(lines[current_line])
                 lines[current_line] = lines[current_line] .. "─" ..  mynode.name .. "─"
-                if (vim.endswith(mynode.key, active_key_start) and mynode.connecting_to == active_key_end) then
+                if (mynode.connecting_from == active_key_start and mynode.connecting_to == active_key_end) then
                     add_active_segment(highlight_positions, current_line, before_name_start, 2*#"─" + #mynode.name)
                 end
             else
@@ -280,7 +280,7 @@ A.draw_graph = function(key_to_node, active_key_start, active_key_end, layer_to_
             end
 
             if (mynode.key == active_key_start and mynode.key ~= active_key_end) or
-               (vim.endswith(mynode.key, active_key_start) and mynode.connecting_to == active_key_end) then
+               (mynode.connecting_from == active_key_start and mynode.connecting_to == active_key_end) then
                 add_active_segment(highlight_positions, current_line, after_name_start, #lines[current_line] - after_name_start_byte)
             end
 

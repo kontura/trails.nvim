@@ -208,11 +208,12 @@ function G.create_node(name, kind, uri, detail, expanded, range, from_ranges, se
     }
 end
 
-function G.create_connection_node(key, child)
+function G.create_connection_node(key, child, source)
     local node = G.create_node("───", 0, "", "", true, {}, nil, nil, key, {child}, G.NodeType.Connection)
     -- node.children can get changed if we connect to another connection node but we want
     -- to keep key of the real target node (for highlighting).
-    node.connecting_to = child.key
+    node.connecting_to = child.connecting_to or child.key
+    node.connecting_from = source.connecting_from or source.key
     return node
 end
 
@@ -268,9 +269,12 @@ G._add_connection_nodes = function(key_to_node_with_fake, layer_to_node_keys)
             if source.expanded then
                 for _, child in pairs(source.children) do
                     if not vim.tbl_contains(targets, child.key) then
-                        local fake_node_key = "connection-" .. source.key
+                        -- This is not the most elegant, but I need both source and child keys in the
+                        -- connection node key to make sure its unique. For connection nodes through
+                        -- multiple layers it will look like: source_key->child_key->child_key->child_key
+                        local fake_node_key = source.key.."->"..child.key
                         if not key_to_node_with_fake[fake_node_key] then
-                            local connection_node = G.create_connection_node(fake_node_key, child)
+                            local connection_node = G.create_connection_node(fake_node_key, child, source)
                             key_to_node_with_fake[fake_node_key] = connection_node
                             table.insert(source.children, connection_node)
                             source.children = remove_node_by_key(source.children, child.key)

@@ -226,4 +226,99 @@ describe("ascii_graph", function()
         assert.equals(1, g.count_crossings(key_to_node, layer_to_node_keys))
     end)
 
+    it ("doesn't add connection nodes when they are not needed", function()
+        local nodea1 = { name = "nodea1", key = "nodea1key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea2 = { name = "nodea2", key = "nodea2key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea3 = { name = "nodea3", key = "nodea3key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodeb2 = { name = "nodeb2", key = "nodeb2key", children = {}, expanded = false, type = g.NodeType.Regular}
+        nodea1.children = { nodea2, nodeb2 }
+        nodea2.children = { nodea3 }
+        nodeb2.children = { nodea3 }
+
+        local key_to_node = {}
+        key_to_node[nodea1.key] = nodea1
+        key_to_node[nodea2.key] = nodea2
+        key_to_node[nodea3.key] = nodea3
+        key_to_node[nodeb2.key] = nodeb2
+
+        local layer_to_node_keys = {}
+        layer_to_node_keys[1] = {nodea1.key}
+        layer_to_node_keys[2] = {nodea2.key, nodeb2.key}
+        layer_to_node_keys[3] = {nodea3.key}
+
+        local expected_result = vim.deepcopy(layer_to_node_keys)
+
+        g._add_connection_nodes(key_to_node, layer_to_node_keys)
+
+        assert.are.same(expected_result, layer_to_node_keys)
+    end)
+
+    it ("creates multiple connection nodes from single parent when needed", function()
+        local nodea1 = { name = "nodea1", key = "nodea1key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea2 = { name = "nodea2", key = "nodea2key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea3 = { name = "nodea3", key = "nodea3key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodeb3 = { name = "nodeb3", key = "nodeb3key", children = {}, expanded = true, type = g.NodeType.Regular}
+        nodea1.children = { nodea3, nodeb3 }
+        nodea2.children = { nodea3, nodeb3 }
+
+        local key_to_node = {}
+        key_to_node[nodea1.key] = nodea1
+        key_to_node[nodea2.key] = nodea2
+        key_to_node[nodea3.key] = nodea3
+        key_to_node[nodeb3.key] = nodeb3
+
+        local layer_to_node_keys = {}
+        layer_to_node_keys[1] = {nodea1.key}
+        layer_to_node_keys[2] = {nodea2.key}
+        layer_to_node_keys[3] = {nodea3.key, nodeb3.key}
+
+        local expected_result = vim.deepcopy(layer_to_node_keys)
+        expected_result[2] = {nodea2.key, "nodea1key->nodea3key", "nodea1key->nodeb3key"}
+
+        g._add_connection_nodes(key_to_node, layer_to_node_keys)
+
+        assert.are.same(expected_result, layer_to_node_keys)
+
+        local con_node1 = key_to_node["nodea1key->nodea3key"]
+        assert.are.same("nodea3key", con_node1.connecting_to)
+        assert.are.same("nodea1key", con_node1.connecting_from)
+
+        local con_node2 = key_to_node["nodea1key->nodeb3key"]
+        assert.are.same("nodeb3key", con_node2.connecting_to)
+        assert.are.same("nodea1key", con_node2.connecting_from)
+    end)
+
+    it ("creates multiple connecting connection nodes when needed", function()
+        local nodea1 = { name = "nodea1", key = "nodea1key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea3 = { name = "nodea3", key = "nodea3key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodeb2 = { name = "nodeb2", key = "nodeb2key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodeb3 = { name = "nodeb3", key = "nodeb3key", children = {}, expanded = true, type = g.NodeType.Regular}
+        nodea1.children = { nodea3 }
+        nodeb2.children = { nodea3 }
+        nodeb3.children = { nodea3 }
+
+        local key_to_node = {}
+        key_to_node[nodea1.key] = nodea1
+        key_to_node[nodeb2.key] = nodeb2
+        key_to_node[nodea3.key] = nodea3
+        key_to_node[nodeb3.key] = nodeb3
+
+        local layer_to_node_keys = {}
+        layer_to_node_keys[1] = {nodea1.key}
+        layer_to_node_keys[2] = {nodeb2.key}
+        layer_to_node_keys[3] = {nodeb3.key}
+        layer_to_node_keys[4] = {nodea3.key}
+
+        local expected_result = vim.deepcopy(layer_to_node_keys)
+        expected_result[2] = {nodeb2.key, "nodea1key->nodea3key"}
+        expected_result[3] = {nodeb3.key, "nodeb2key->nodea3key", "nodea1key->nodea3key->nodea3key"}
+
+        g._add_connection_nodes(key_to_node, layer_to_node_keys)
+
+        assert.are.same(expected_result, layer_to_node_keys)
+
+        local con_node1 = key_to_node["nodea1key->nodea3key->nodea3key"]
+        assert.are.same("nodea3key", con_node1.connecting_to)
+        assert.are.same("nodea1key", con_node1.connecting_from)
+    end)
 end)
