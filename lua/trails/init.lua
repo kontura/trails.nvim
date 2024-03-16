@@ -68,10 +68,10 @@ function M.toggle_expanded_focused()
     if focused_node ~= nil then
         if focused_node.expanded then
             focused_node.expanded = false
+            refresh_graph()
         else
             M.expand_node(focused_node)
         end
-        refresh_graph()
     end
 end
 
@@ -98,7 +98,6 @@ function M.move_focus(dir)
     local focused_node = M.key_to_node[focused_node_key_start]
     if dir == 'l' and focused_node and not focused_node.expanded then
         M.expand_node(focused_node)
-        refresh_graph()
     else
         local moved = mv.graph_move(M.layer_to_node_keys,
                                     M.key_to_node_with_fake,
@@ -179,6 +178,8 @@ local handler = function(err, result, ctx, config)
         node.calls[parent.key] = c_full["fromRanges"]
     end
     parent.expanded = true
+    -- Since handler is async (it is executed from LSP as a callback) we have to
+    -- refresh the graph after it finishes, not from the caller of expand_node
     refresh_graph()
 end
 
@@ -193,6 +194,7 @@ M.expand_node = function(node)
     end
     if #node.children > 0 then
         node.expanded = true
+        refresh_graph()
         return
     end
     local clients = vim.lsp.get_active_clients()
