@@ -303,11 +303,10 @@ G.layout_graph = function(root, key_to_node)
                 end
             else
                 node_to_layer[mynode.key] = layer_count
-            end
-
-            if mynode.expanded or mynode == root then
-                for j = 1, #mynode.children do
-                    table.insert(next_column, mynode.children[j])
+                if mynode.expanded or mynode == root then
+                    for j = 1, #mynode.children do
+                        table.insert(next_column, mynode.children[j])
+                    end
                 end
             end
         end
