@@ -173,13 +173,17 @@ function G.minimize_crossings_genetic(key_to_node, layer_to_node_keys)
     return population[1].gene
 end
 
-function G.print_tree(root, indent)
+function G.print_tree(root, indent, printed)
+    if printed[root.key] then
+        return
+    end
     indent = indent or ""
     print(indent .. root.key)
+    printed[root.key] = true
 
     indent = indent .. "  "
     for _, child in pairs(root.children) do
-        G.print_tree(child, indent)
+        G.print_tree(child, indent, printed)
     end
 
 end

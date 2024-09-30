@@ -205,7 +205,7 @@ end
 
 M.print_tree = function()
     --g.print_tree(M.root)
-    g.print_tree(M.key_to_node_with_fake[M.layer_to_node_keys[1][1]])
+    g.print_tree(M.key_to_node_with_fake[M.layer_to_node_keys[1][1]], "", {})
 end
 
 M.print_lines_to_buffer = function(buf, lines, highlight_positions, active_node_pos, expanded_positions)
