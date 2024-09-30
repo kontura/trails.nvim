@@ -292,7 +292,7 @@ G._add_connection_nodes = function(key_to_node_with_fake, layer_to_node_keys)
     end
 end
 
-G.layout_graph = function(root, key_to_node)
+G._assign_nodes_to_layers = function(root, key_to_node)
     local column = {root}
     local node_to_layer = {}
     local layer_count = 0
@@ -302,7 +302,7 @@ G.layout_graph = function(root, key_to_node)
         for node_index = 1, #column do
             local mynode = column[node_index]
             if node_to_layer[mynode.key] then
-                if node_to_layer[mynode.key] < layer_count then
+                if node_to_layer[mynode.key] < layer_count and mynode ~= root then
                     node_to_layer[mynode.key] = layer_count
                 end
             else
@@ -318,6 +318,10 @@ G.layout_graph = function(root, key_to_node)
         column = next_column
     end
 
+    return node_to_layer
+end
+
+G._transform_to_layers = function(key_to_node, node_to_layer)
     local layer_to_node_keys = {}
     for node_key, layer_index in pairs(node_to_layer) do
         local node = key_to_node[node_key]
@@ -330,6 +334,25 @@ G.layout_graph = function(root, key_to_node)
         end
         table.insert(layer_to_node_keys[layer_index], node_key)
     end
+
+    -- Prune empty layers
+    local pruned_layer_to_node_keys = {}
+    local new_index = 1
+    for j = 1, #layer_to_node_keys do
+        if layer_to_node_keys[j] and not vim.tbl_isempty(layer_to_node_keys[j]) then
+            pruned_layer_to_node_keys[new_index] = layer_to_node_keys[j]
+            layer_to_node_keys[j] = nil
+            new_index = new_index + 1
+        end
+    end
+
+    return pruned_layer_to_node_keys
+end
+
+G.layout_graph = function(root, key_to_node)
+    local node_to_layer = G._assign_nodes_to_layers(root, key_to_node)
+
+    local layer_to_node_keys = G._transform_to_layers(key_to_node, node_to_layer)
 
     -- Clone all nodes so we can insert fakes
     local key_to_node_with_fake = {}

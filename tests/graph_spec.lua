@@ -321,4 +321,80 @@ describe("ascii_graph", function()
         assert.are.same("nodea3key", con_node1.connecting_to)
         assert.are.same("nodea1key", con_node1.connecting_from)
     end)
+
+    it ("assigns layers to simple graph", function()
+        local nodea1 = { name = "nodea1", key = "nodea1key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea2 = { name = "nodea2", key = "nodea2key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea3 = { name = "nodea3", key = "nodea3key", children = {}, expanded = true, type = g.NodeType.Regular}
+        nodea1.children = { nodea2 }
+        nodea2.children = { nodea3 }
+
+        local key_to_node = {}
+        key_to_node[nodea1.key] = nodea1
+        key_to_node[nodea2.key] = nodea2
+        key_to_node[nodea3.key] = nodea3
+
+        local expected_result = {}
+        expected_result[nodea1.key] = 1
+        expected_result[nodea2.key] = 2
+        expected_result[nodea3.key] = 3
+
+        local layer_to_node_keys = g._assign_nodes_to_layers(nodea1, key_to_node)
+
+        assert.are.same(expected_result, layer_to_node_keys)
+    end)
+
+    it ("assigns layers to a simple graph with loop", function()
+        local nodea1 = { name = "nodea1", key = "nodea1key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea2 = { name = "nodea2", key = "nodea2key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea3 = { name = "nodea3", key = "nodea3key", children = {}, expanded = true, type = g.NodeType.Regular}
+        nodea1.children = { nodea2 }
+        nodea2.children = { nodea3 }
+        nodea3.children = { nodea1 }
+
+        local key_to_node = {}
+        key_to_node[nodea1.key] = nodea1
+        key_to_node[nodea2.key] = nodea2
+        key_to_node[nodea3.key] = nodea3
+
+        local expected_result = {}
+        expected_result[nodea1.key] = 1
+        expected_result[nodea2.key] = 2
+        expected_result[nodea3.key] = 3
+
+        local layer_to_node_keys = g._assign_nodes_to_layers(nodea1, key_to_node)
+
+        assert.are.same(expected_result, layer_to_node_keys)
+    end)
+
+    it ("assigns layers to a simple graph with loop 2", function()
+        local nodea1 = { name = "nodea1", key = "nodea1key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea2 = { name = "nodea2", key = "nodea2key", children = {}, expanded = true, type = g.NodeType.Regular}
+        local nodea3 = { name = "nodea3", key = "nodea3key", children = {}, expanded = true, type = g.NodeType.Regular}
+        nodea1.children = { nodea2 }
+        nodea2.children = { nodea3 }
+        nodea3.children = { nodea2 }
+
+        local key_to_node = {}
+        key_to_node[nodea1.key] = nodea1
+        key_to_node[nodea2.key] = nodea2
+        key_to_node[nodea3.key] = nodea3
+
+        local expected_result = {}
+        expected_result[nodea1.key] = 1
+        expected_result[nodea2.key] = 4
+        expected_result[nodea3.key] = 3
+
+        local node_to_layer = g._assign_nodes_to_layers(nodea1, key_to_node)
+        local layer_to_node_keys = g._transform_to_layers(key_to_node, node_to_layer)
+
+        assert.are.same(expected_result, node_to_layer)
+
+        local expected_layer_to_node_keys = {}
+        expected_layer_to_node_keys[1] = {nodea1.key}
+        expected_layer_to_node_keys[2] = {nodea3.key}
+        expected_layer_to_node_keys[3] = {nodea2.key}
+
+        assert.are.same(expected_layer_to_node_keys, layer_to_node_keys)
+    end)
 end)
